@@ -1,0 +1,4 @@
+name: hustlehub+env
+values:
+  - key: auth_token
+    value: ''

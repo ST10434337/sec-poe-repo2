@@ -5,12 +5,13 @@ const helmet = require('helmet');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const mongoose = require('mongoose');
+
+
 
 
 const app = express();
 
-// Middleware
-const errorHandler = require('./middleware/errorHandler');
 
 // .env variables
 const PORT = process.env.PORT || 4000;
@@ -48,16 +49,25 @@ app.use(
     })
 );
 
-// Send a response with a 404 status code for any undefined routes
-app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-})
+app.use(express.json()); 
+
+// Middleware
+const errorHandler = require('./middleware/errorHandler');
+
+// Db Congfig
+const connectDB = require('./config/db');
+connectDB();
+// Routes
+const authRoutes = require('./routes/auth');
 
 // Error handling middleware
 app.use(errorHandler);
+// Auth handling middleware
+app.use('/api/auth', authRoutes);
 
 // Start the server based on the USE_HTTPS environment variable
-if (process.env.USE_HTTPS) {
+if (USE_HTTPS) {
+    console.log("Starting HTTPS...");
     const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
     const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'localhost-cert.pem');
 
@@ -70,8 +80,10 @@ if (process.env.USE_HTTPS) {
         console.log(`Application listening on port ${PORT} (HTTPS)`);
     });
 } else {
+    console.log("Starting HTTP...");
     app.listen(PORT, () => {
         console.log(`Application listening on port ${PORT}`);
+        console.log(`http://localhost:4000`)
     });
 };
 
@@ -87,3 +99,36 @@ app.get('/system-info', (req, res) => {
         enviroment: process.env.ENVIROMENT
     });
 });
+
+// Health Endpoint
+app.get('/health', (req, res) => {
+    const mongoStates = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+    };
+
+    const dbState = mongoose.connection.readyState;
+    const isHealthy = dbState === 1;
+
+    res.status(isHealthy ? 200 : 503).json(
+    {
+        Api: `Running on Port ${PORT}`,
+        MongoDb: {
+        status: isHealthy ? 'ok' : 'degraded',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        services: {
+            database: {
+                status: mongoStates[dbState],
+                isHealthy: isHealthy
+            }
+        }
+    }});
+});
+
+// Send a response with a 404 status code for any undefined routes
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+})
