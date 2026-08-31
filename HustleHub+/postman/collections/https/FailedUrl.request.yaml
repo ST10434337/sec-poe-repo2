@@ -1,0 +1,6 @@
+$kind: http-request
+name: FailedUrl
+description: ""
+url: https://localhost:4000/FailUrl
+method: GET
+order: 4244072882969682

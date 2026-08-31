@@ -1,0 +1,10 @@
+$kind: http-request
+name: api/auth/me
+description: ""
+url: https://localhost:4000/api/auth/me
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{auth_token}}"
+order: 3565971820449141

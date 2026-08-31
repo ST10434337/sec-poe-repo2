@@ -9,8 +9,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./index.js",
-    "dev": "nodemon server.js"
-  },
+    "dev": "nodemon server.js",
+    "mkcert": "node make-certs.js"
+    },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",

@@ -1,0 +1,9 @@
+$kind: http-request
+name: /
+description: ""
+url: https://localhost:4000/
+method: GET
+body:
+  type: json
+  content: ""
+order: 1788183387842
