@@ -11,7 +11,9 @@ body:
 
     \    \"name\": \"john_doe\",\r
 
-    \    \"password\": \"Pass123!\"\r
+    \    \"password\": \"Pass123!\",\r
+
+    \    \"role\":\"user\"\r
 
     }"
 order: 80380357860250

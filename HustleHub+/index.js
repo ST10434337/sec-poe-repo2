@@ -7,11 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 
-
-
-
 const app = express();
-
 
 // .env variables
 const PORT = process.env.PORT || 4000;
