@@ -11,6 +11,8 @@ node --version
 npm --version
 ```
 
+Further please ensure you have a Mongodb running and have a connection setup and running. A Databes "hustlehub" will be created and used to store data.
+
 ---
 
 ## 🆕 First-Time Setup
