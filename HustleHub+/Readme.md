@@ -24,6 +24,7 @@ npm install
 npm run mkcert
 ```
 ***ONLY USE mkcert IN DEVELOPMENT***
+
 This only needs to be done during the initial setup, unless the certificates need to be regenerated then rerun the `mkcert`.
 
 ---
