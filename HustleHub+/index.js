@@ -45,7 +45,7 @@ app.use(
     })
 );
 
-app.use(express.json()); 
+app.use(express.json());
 
 // Middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -89,13 +89,14 @@ app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the HustleHub+ API' });
 });
 
-app.get('/system-info', (req, res) => {
-    res.json({
-        app: process.env.APP_NAME,
-        enviroment: process.env.ENVIROMENT
+if (process.env.NODE_ENV === 'Dev') {
+    app.get('/system-info', (req, res) => {
+        res.json({
+            app: process.env.APP_NAME,
+            enviroment: process.env.ENVIROMENT
+        });
     });
-});
-
+}
 // Health Endpoint
 app.get('/health', (req, res) => {
     const mongoStates = {
@@ -109,19 +110,20 @@ app.get('/health', (req, res) => {
     const isHealthy = dbState === 1;
 
     res.status(isHealthy ? 200 : 503).json(
-    {
-        Api: `Running on Port ${PORT}`,
-        MongoDb: {
-        status: isHealthy ? 'ok' : 'degraded',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        services: {
-            database: {
-                status: mongoStates[dbState],
-                isHealthy: isHealthy
+        {
+            Api: `Running on Port ${PORT}`,
+            MongoDb: {
+                status: isHealthy ? 'ok' : 'degraded',
+                timestamp: new Date().toISOString(),
+                // uptime: process.uptime(),
+                services: {
+                    database: {
+                        status: mongoStates[dbState],
+                        isHealthy: isHealthy
+                    }
+                }
             }
-        }
-    }});
+        });
 });
 
 // Send a response with a 404 status code for any undefined routes

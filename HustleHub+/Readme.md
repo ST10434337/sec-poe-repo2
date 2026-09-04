@@ -117,3 +117,139 @@ Run npm start
         ↓
 Application starts
 ```
+
+
+# API Reference
+
+## Auth
+
+### POST /api/auth/register
+
+**Request Body**
+```json
+{
+  "email": "String",
+  "name": "String",
+  "password": "String",
+  "role": "String (user | seller)"
+}
+```
+
+**Success — 201**
+```json
+{
+  "token": "String",
+  "user": {
+    "id": "userId",
+    "email": "userEmail",
+    "name": "userName",
+    "role": "userRole"
+  }
+}
+```
+
+**Errors**
+| Status | Body |
+|--------|------|
+| 400 | `{ "message": "All fields required" }` |
+| 409 | `{ "message": "Email already in use" }` |
+
+---
+
+### POST /api/auth/login
+
+**Request Body**
+```json
+{
+  "email": "String",
+  "password": "String"
+}
+```
+
+**Success — 200**
+```json
+{
+  "token": "String",
+  "user": {
+    "id": "userId",
+    "email": "userEmail",
+    "name": "userName",
+    "role": "userRole"
+  }
+}
+```
+
+**Errors**
+| Status | Body |
+|--------|------|
+| 400 | `{ "message": "All fields required" }` |
+| 401 | `{ "message": "Invalid credentials" }` |
+
+---
+
+### GET /api/auth/me
+
+**Headers**
+
+
+**Success — 200**
+```json
+{
+  "email": "String",
+  "name": "String",
+  "role": "String"
+}
+```
+
+**Errors**
+| Status | Body |
+|--------|------|
+| 401 | `{ "message": "No token provided" }` |
+| 401 | `{ "message": "Invalid or expired token" }` |
+
+---
+
+## System
+
+### GET /health
+
+**Success — 200**
+```json
+{
+  "api": "Running on Port ####",
+  "mongoDb": {
+    "status": "String",
+    "timestamp": "String",
+    "services": {
+      "database": {
+        "status": "String",
+        "isHealthy": true
+      }
+    }
+  }
+}
+```
+
+---
+
+### GET /
+
+**Success — 200**
+```json
+{
+  "message": "Welcome to the HustleHub+ API"
+}
+```
+
+---
+
+### GET /system-info
+
+**Success — 200**
+```json
+{
+  "app": "String",
+  "environment": "String"
+}
+```
+

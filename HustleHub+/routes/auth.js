@@ -54,7 +54,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', require('../middleware/auth'), async (req, res) => {
   // Fetch user data without password
   const user = await User.findById(req.userId).select('-password');
-  res.json(user);
+  res.json({ name: user.name, email: user.email, role: user.role });
 });
 
 module.exports = router;
