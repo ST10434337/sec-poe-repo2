@@ -45,6 +45,7 @@ app.use(
     })
 );
 
+// Parse incoming JSON requests
 app.use(express.json());
 
 // Middleware
@@ -85,10 +86,12 @@ if (USE_HTTPS) {
 
 // Base Defined Routes
 
+// Root Endpoint
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the HustleHub+ API' });
 });
 
+// System Info Endpoint (only available in development mode)
 if (process.env.NODE_ENV === 'Dev') {
     app.get('/system-info', (req, res) => {
         res.json({
@@ -97,7 +100,7 @@ if (process.env.NODE_ENV === 'Dev') {
         });
     });
 }
-// Health Endpoint
+// Api Health Check Endpoint
 app.get('/health', (req, res) => {
     const mongoStates = {
         0: 'disconnected',

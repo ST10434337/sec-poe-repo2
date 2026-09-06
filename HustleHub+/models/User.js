@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+// Define the User schema
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
@@ -8,11 +9,13 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user','seller','admin'], default: 'user' },
 }, { timestamps: true });
 
+// Pre-save hook to hash the password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return ;
   this.password = await bcrypt.hash(this.password, 12);
 });
 
+// Method to compare candidate password with the hashed password
 userSchema.methods.comparePassword = function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
