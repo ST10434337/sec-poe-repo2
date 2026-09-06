@@ -133,3 +133,6 @@ app.get('/health', (req, res) => {
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 })
+
+//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
+//  Module manual. The Independent Institute of Education (Pty) Ltd.
