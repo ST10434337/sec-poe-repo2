@@ -26,8 +26,11 @@ const registerUser = async (req, res) => {
         if (!email || !password || !name || !role)
             return res.status(400).json({ message: 'All fields are required' });
 
+        let normalizedName = name.trim(); // Normalize name by trimming whitespace
+
+        let normalizedEmail = email.toLowerCase().trim(); // Normalize email by converting to lowercase and trimming whitespace
         // Check email format
-        if (!testEmailFormat(email))
+        if (!testEmailFormat(normalizedEmail))
             return res.status(400).json({ message: 'Invalid email format' });
 
         // Check password strength
@@ -35,11 +38,11 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character' });
 
         // Check if user already exists
-        const existing = await User.findOne({ email });
+        const existing = await User.findOne({ email: normalizedEmail });
         if (existing) return res.status(400).json({ message: 'Email already in use' });
 
         // Create new user and generate token
-        const user = await User.create({ email, password, name, role });
+        const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role });
         const token = generateToken(user._id, user.role);
         // Send response with token and user info (excluding password)
         res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
@@ -76,7 +79,7 @@ const registerUser = async (req, res) => {
                 return res.status(400).json({ message: 'Email and password are required' });
             }
             // Check if user exists and password matches
-            const user = await User.findOne({ email });
+            const user = await User.findOne({ email: email.toLowerCase().trim() });
             if (!user || !(await user.comparePassword(password))) {
                 return res.status(401).json({ message: 'Invalid credentials' });
             }
