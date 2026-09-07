@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');//(The IIE, 2026)
+const bcrypt = require('bcrypt');//(The IIE, 2026)
 
 // Define the User schema
 const userSchema = new mongoose.Schema({
@@ -21,3 +21,5 @@ userSchema.methods.comparePassword = function (candidate) {
 };
 
 module.exports = mongoose.model('User', userSchema);
+//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
+//  Module manual. The Independent Institute of Education (Pty) Ltd. 

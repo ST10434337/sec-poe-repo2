@@ -11,7 +11,11 @@ node --version
 npm --version
 ```
 
-Further please ensure you have a Mongodb running and have a connection setup and running. A Databes "hustlehub" will be created and used to store data.
+Ensure that you have *mongodb installed* too.
+Download and install it from [here](https://www.mongodb.com/products/self-managed/community-edition) if you don't already have it installed on your machine. 
+
+
+Further please ensure you have a Mongodb running and have a connection setup and running. A Database "hustlehub" will be created and used to store data.
 
 ---
 
@@ -22,6 +26,7 @@ If you are running the application for the **first time**, you need to generate 
 Run:
 
 ```bash
+cd HustleHub+
 npm install
 npm run mkcert
 ```
@@ -36,6 +41,7 @@ This only needs to be done during the initial setup, unless the certificates nee
 For development, use:
 
 ```bash
+cd HustleHub+
 npm run dev
 ```
 
@@ -48,6 +54,7 @@ Development mode is recommended when actively working on the application, as it 
 For normal use, start the application with:
 
 ```bash
+cd HustleHub+
 npm start
 ```
 
@@ -58,6 +65,7 @@ npm start
 ### First-Time Launch
 
 ```bash
+cd HustleHub+
 npm install
 npm run mkcert
 npm run dev
@@ -66,12 +74,14 @@ npm run dev
 ### Development
 
 ```bash
+cd HustleHub+
 npm run dev
 ```
 
 ### Normal Launch
 
 ```bash
+cd HustleHub+
 npm start
 ```
 

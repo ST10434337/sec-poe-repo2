@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-// Function to connect to the MongoDB database
+// Function to connect to the MongoDB database ~> (The IIE, 2026)
 const connectDB = async () => {
   try {
     // Connect to the MongoDB database using the connection string from environment variables
@@ -13,3 +13,5 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
+//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
+//  Module manual. The Independent Institute of Education (Pty) Ltd. 

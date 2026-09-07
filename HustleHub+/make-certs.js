@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-// 1. Create folder safely if it doesn't exist
+// 1. Create folder safely if it doesn't exist (Pichler, 2022)
 if (!fs.existsSync('certs')) {
   fs.mkdirSync('certs');
 }
@@ -15,3 +15,4 @@ if (!fs.existsSync('certs/localhost-cert.pem')) {
 } else {
   console.log('Certs already exist. Skipping generation.');
 }
+// Pichler, F., 2022. Self-signed certificates for local HTTPS made easy. Mainmatter blog, [blog] 22 September. Available at: https://mainmatter.com/blog/2022/09/22/selfsigned-certificates-for-development/ [Accessed 7 September 2026].

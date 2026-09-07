@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); //(The IIE, 2026)
 
-// Middleware to require authentication for protected routes
+// Middleware to require authentication for protected routes 
 function requireAuth(req, res, next) {
   // Get the token from the Authorization header
   const authHeader = req.headers.authorization;
@@ -20,3 +20,5 @@ function requireAuth(req, res, next) {
 };
 
 module.exports = requireAuth;
+//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
+//  Module manual. The Independent Institute of Education (Pty) Ltd. 

@@ -17,7 +17,7 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 // Disable the 'X-Powered-By' header for security reasons
 app.disable('x-powered-by');
 
-// Use Helmet to define HTTP headers for security
+// Use Helmet to define HTTP headers for security ~> (The IIE, 2026)
 app.use(
     helmet({
         contentSecurityPolicy: {
@@ -36,7 +36,7 @@ app.use(
     })
 );
 
-// Enable CORS for the specified client origin
+// Enable CORS for the specified client origin ~> (The IIE, 2026)
 app.use(
     cors({
         origin: CLIENT_ORIGIN,
@@ -62,7 +62,7 @@ app.use(errorHandler);
 // Auth handling middleware
 app.use('/api/auth', authRoutes);
 
-// Start the server based on the USE_HTTPS environment variable
+// Start the server based on the USE_HTTPS environment variable ~> (The IIE, 2026)
 if (USE_HTTPS) {
     console.log("Starting HTTPS...");
     const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
@@ -91,7 +91,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the HustleHub+ API' });
 });
 
-// System Info Endpoint (only available in development mode)
+// System Info Endpoint (only available in development mode) ~> (The IIE, 2026)
 if (process.env.NODE_ENV === 'Dev') {
     app.get('/system-info', (req, res) => {
         res.json({
@@ -135,4 +135,4 @@ app.use((req, res) => {
 })
 
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
-//  Module manual. The Independent Institute of Education (Pty) Ltd.
+//  Module manual. The Independent Institute of Education (Pty) Ltd. 

@@ -3,11 +3,11 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Generate JWT token
+// Generate JWT token ~> (The IIE, 2026)
 const generateToken = (userId, role) =>
   jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 
-// Register route
+// Register route ~> (The IIE, 2026)
 router.post('/register', async (req, res) => {
   try {
     // Validate input
@@ -31,7 +31,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login route
+// Login route ~> (The IIE, 2026)
 router.post('/login', async (req, res) => {
   try {
     // Validate input
@@ -62,3 +62,5 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
 });
 
 module.exports = router;
+//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
+//  Module manual. The Independent Institute of Education (Pty) Ltd. 
