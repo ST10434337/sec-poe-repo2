@@ -7,7 +7,10 @@ const connectDB = async () => {
     console.log('MongoDB connected');
   } catch (err) {
     // Log any connection errors and exit the process
+    console.error('MongoDB Expieneced Error During Connection Attempt');
+    if (process.env.NODE_ENV === 'Dev') {
     console.error('MongoDB connection error:', err.message);
+    }
     process.exit(1);
   }
 };
