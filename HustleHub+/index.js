@@ -51,7 +51,7 @@ app.use(express.json());
 // Middleware
 const errorHandler = require('./middleware/errorHandler');
 
-// Db Config
+// Db Congfig
 const connectDB = require('./config/db');
 connectDB();
 // Routes
@@ -98,7 +98,7 @@ if (process.env.NODE_ENV === 'Dev') {
     app.get('/system-info', (req, res) => {
         res.json({
             app: process.env.APP_NAME,
-            environment: process.env.ENVIRONMENT
+            enviroment: process.env.ENVIROMENT
         });
     });
 }
