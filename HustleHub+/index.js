@@ -57,10 +57,12 @@ connectDB();
 // Routes
 const authRoutes = require('./routes/auth');
 
-// Error handling middleware
-app.use(errorHandler);
+
 // Auth handling middleware
 app.use('/api/auth', authRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 // Start the server based on the USE_HTTPS environment variable ~> (The IIE, 2026)
 if (USE_HTTPS) {
