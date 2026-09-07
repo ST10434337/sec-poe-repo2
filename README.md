@@ -152,7 +152,7 @@ jwt.sign(
 
 **Request-level hardening**
 - *Helmet* applies Content Security Policy with these directives:
-    `default-src 'self', 
+    `default-src 'self'`, 
     `script-src 'self'`, 
     `style-src 'self'`, 
     `img-src 'self' data:`, 
