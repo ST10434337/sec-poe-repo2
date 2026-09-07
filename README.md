@@ -20,7 +20,7 @@ Backend Documentation containing installation steps, environment variable placem
 ## 1. Architecture Overview
 HustleHub+ follows the MERN stack. Part 1 delivers the secure backend foundation the rest of the marketplace will be built on top of. 
 
-Insert Diagram here [](Images/)
+![System Architecture Diagram](Images/System_Architecture_Diagram.png)
 
 **System boundaries**:
 - The *Client* only ever communicates with the API over HTTP/HTTPS using JSON. It has no direct database access.
@@ -76,6 +76,9 @@ HustleHub+/
 ---
 
 ## 2. Request Flow
+
+![System Architecture Diagram](Images/System_Architecture_Diagram.png)
+
 **Registration**
  
 ```
