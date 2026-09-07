@@ -202,6 +202,7 @@ Although rubric alludes to part 2 features in part 1 under postman testing secti
 - [ ] Tax estimation and financial dashboard 
 - [ ] Expanded input sanitization and rate limiting
 - [ ] Backend/Frontend automated testing, Newman execution
+
 **Part 3:**
 - [ ] CI/CD via Github Actions, static analysis, Docker/Compose
 - [ ] Structured logging/monitoring and additional security controls
