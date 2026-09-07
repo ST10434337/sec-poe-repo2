@@ -3,63 +3,16 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Generate JWT token ~> (The IIE, 2026)
-const generateToken = (userId, role) =>
-  jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+const { registerUser, loginUser, getCurrentUser } = require('../controllers/authController');
 
 // Register route ~> (The IIE, 2026)
-router.post('/register', async (req, res) => {
-  try {
-    // Validate input
-    const { email, password, name, role } = req.body;
-    if (!email || !password || !name || !role) {
-      return res.status(400).json({ message: 'All fields are required' });
-    }
-    
-    // Check if user already exists
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'Email already in use' });
-
-    // Create new user and generate token
-    const user = await User.create({ email, password, name, role });
-    const token = generateToken(user._id, user.role);
-    // Send response with token and user info (excluding password)
-    res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.post('/register', registerUser);
 
 // Login route ~> (The IIE, 2026)
-router.post('/login', async (req, res) => {
-  try {
-    // Validate input
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-    // Check if user exists and password matches
-    const user = await User.findOne({ email });
-      if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-    // Generate token and send response
-    const token = generateToken(user._id, user.role);
-    res.json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
-  } catch (err) {
-    // Handle errors
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.post('/login', loginUser);
 
 // Example: get current user (protected)
-router.get('/me', require('../middleware/auth'), async (req, res) => {
-  // Fetch user data without password
-  const user = await User.findById(req.userId).select('-password');
-  res.json({ name: user.name, email: user.email, role: user.role });
-});
+router.get('/me', require('../middleware/auth'), getCurrentUser);
 
 module.exports = router;
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
