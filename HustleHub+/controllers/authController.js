@@ -1,6 +1,5 @@
-const express = require('express');
-const router = express.Router();
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 
 // Generate JWT token ~> (The IIE, 2026)
@@ -93,9 +92,19 @@ const registerUser = async (req, res) => {
 
     // Get current user route handler function
     const getCurrentUser = async (req, res) => {
-        // Fetch user data without password
-        const user = await User.findById(req.userId).select('-password');
-        res.json({ name: user.name, email: user.email, role: user.role });
+        try {
+            // Fetch user data without password
+            const user = await User.findById(req.userId).select('-password');
+
+            // Token is valid but the account no longer exists
+            if (!user) return res.status(404).json({ message: 'User not found' });
+
+            res.json({ name: user.name, email: user.email, role: user.role });
+        } catch (err) {
+            // Handle errors
+            console.error(err);
+            res.status(500).json({ message: 'Server error' });
+        }
     };
 
     module.exports = {
