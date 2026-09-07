@@ -134,6 +134,10 @@ Application starts
 
 ### POST /api/auth/register
 
+**Postman screenshot of successful register**
+
+![Screenshot in postman](../Images/API_Postman_test_api_auth_register.png)
+
 **Request Body**
 ```json
 {
@@ -186,6 +190,10 @@ Application starts
 
 ### POST /api/auth/login
 
+**Postman screenshot of successful login**
+
+![Screenshot in postman](../Images/API_Postman_test_api_auth_login.png)
+
 Authenticates an existing user and returns a JWT authentication token.
 
 **Request Body**
@@ -221,6 +229,14 @@ For security, the API returns the same `Invalid credentials` response whether th
 ---
 
 ### GET /api/auth/me
+
+**Postman screenshot protected route with Valid Token:**
+
+![Screenshot in postman](../Images/API_Postman_test_api_auth_me_valid_token.png)
+
+**Postman screenshot protected route with Invalid Token:**
+
+![Screenshot in postman](../Images/API_Postman_test_api_auth_me_invalid_token.png)
 
 Returns the profile of the currently authenticated user.
 
