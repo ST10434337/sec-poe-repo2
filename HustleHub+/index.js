@@ -133,7 +133,7 @@ app.get('/health', (req, res) => {
 
 // Send a response with a 404 status code for any undefined routes
 app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
+    res.status(404).json({ message: 'Route not found' });
 })
 
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
