@@ -44,6 +44,8 @@ MongoDB(via Mongoose) is the persistence layer from part 1 onwards. We choose to
 HustleHub+/
 ├── config/
 │   └── db.js
+├── controllers/
+│   └── authController.js
 ├── middleware/
 │   ├── auth.js
 │   └── errorHandler.js
@@ -61,14 +63,15 @@ HustleHub+/
 ```
 
 | File | Responsibility |
-|---|---|
-| `index.js` | Builds the Express app, wires up security middleware, connects to MongoDB, registers routes, configures HTTP/HTTPS, exposes `/health`, `/system-info`, and the 404 fallback |
-| `config/db.js` | Establishes the Mongoose connection using `DATABASE_URL`; exits the process on connection failure |
-| `models/User.js` | User schema, role enum, password-hashing pre-save hook, password comparison method |
-| `routes/auth.js` | Registration, login, and the protected `/me` route |
-| `middleware/auth.js` | Extracts and verifies the Bearer JWT before allowing access to a protected route |
-| `middleware/errorHandler.js` | Returns a generic error response instead of leaking internals |
-| `make-certs.js` | Generates a self-signed local dev certificate via OpenSSL (dev-only, not for production) |
+|--------------------------------|-------------------------------------------------------------|
+| `index.js` | Builds the Express app, wires up security middleware, connects to MongoDB, registers routes, configures HTTP/HTTPS, exposes `/health`, `/system-info`, and the 404 fallback. |
+| `config/db.js` | Establishes the Mongoose connection using `DATABASE_URL`; exits the process on connection failure. |
+|`controllers/authController.js`| Contains the actual registration, login and current-user handler logic validation, password/email checks, JWT issuance and error handling. |
+| `models/User.js` | User schema, role enum, password-hashing pre-save hook, password comparison method. |
+| `routes/auth.js` | Thin wiring only as it maps `/api/auth/register`, `/api/auth/login` and `/api/auth/me` to the controller functions |
+| `middleware/auth.js` | Extracts and verifies the Bearer JWT before allowing access to a protected route. |
+| `middleware/errorHandler.js` | Returns a generic error response instead of leaking internals. |
+| `make-certs.js` | Generates a self-signed local dev certificate via OpenSSL (dev-only, not for production). |
 
 ---
 
@@ -80,6 +83,8 @@ Client
   ↓ POST /api/auth/register
 Validate required fields (email, password, name, role)
   ↓ missing → 400 "All fields are required"
+Validate email format and password strength
+  ↓ invalid → 400 "Invalid email format" / 400 password rule message
 Check whether the email already exists
   ↓ exists → 400 "Email already in use"
 Hash password with bcrypt (12 salt rounds) via the User model's pre-save hook
@@ -146,6 +151,7 @@ jwt.sign(
 ## 4. Validation Approach 
 **Input validation:**
 - *Registration* `email`, `password`, `name` and `role`. If any are missing the API returns `400` with `{ "message": "All fields are required" }`.
+- *Registration* also checks the format before creating a user with regex-based email formatting check (`400 `with `{ "message": "Invalid email format" }`) & a password strength check requiring at least 8 characters with upper-case letter, lowercase letter, number and special character (`400` with a message describing the rule).
 - *Duplicate email* returns `400` with `{ "message": "Email already in use" }`.
 - *Login* requires `email` and `password`. If either is missing the API returns `400` with `{ "message": "Email and password are required" }`.
 - *Mongoose* enforces schema-level rules: required fields, a unique & lowercased/trimmed email and an enumerated `role` of (`user`/`seller`/`admin`).
@@ -170,8 +176,11 @@ jwt.sign(
 
 **Error handling**
 - The shared `errorHandler.js` middleware returns a fixed non-descriptive `500` response with `{ "error": "Oopsie Daisy There was an error" }` rather than a stack trace, file path or config value.
-- It's registered right after JSON body parsing and before the auth routes. That means it mainly catches errors from earlier middleware (eg. a malformed JSON request body). The auth routes handle their own errors inline via `try/catch` and respond directly (eg `500` with `{ "message": "Server error" }`). **INSTEAD OF DELEGATING TO THIS HANDLER -- fix?**
-- Unknown routes return `404` with `{ "error": "Route not found" }`.
+- The error handler is registered after auth routes so `next(err)` calls from anywhere downstream, including future routes so it can correctly fail through it.
+- Server-side console logging in `registerUser` is gated behind `NODE_ENV === 'Dev'`. This means the full error object is only printed on the server console in development, which keeps production logs free of raw error details (Stack traces, etc. ) even on the server side.
+- `registerUser` also distinguishes Mongoose validation errors specifically returning: `400` with `{ "message": "Validation error" }` instead of generic `500`.
+- Unknown routes return `404` with `{ "message": "Route not found" }`.
+
 
 ## 5. Security Rational
 
@@ -186,7 +195,8 @@ jwt.sign(
 |Helmet + CSP | Used to reduce exposure to common browser0based attacks like XSS via script injection at the HTTP header level.|
 |`X-Powered-By` is disabled | This reduces technology fingerprinting that could help the attacker target known framework vulnerabilities. | 
 |Controlled error responses | Prevents internal implementation details (stack trackers, paths, secrets) from leaking to a client or threat actor. |
-
+|Environment gated server logging | Full error details are only printed in the console in `Dev`; production server logs stay minimal reducing what's exposed even to someone with log access. |
+|Email/password format validation | Regex checks on registration rejected malformed emails & weak passwords before they ever reach the database, rather than relying on Mongoose schema rules alone. 
 
 
 ## 6. Known Limits and Future Work for part 2 and onwards
