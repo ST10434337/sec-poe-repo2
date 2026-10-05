@@ -60,7 +60,7 @@ connectDB();
 const authRoutes = require('./routes/auth');
 
 // Limit Rates for /api routes using the rateLimiter middleware
-app.use('/api', rateLimit);
+app.use('/api', rateLimit.rateLimiter);
 
 // Auth handling middleware
 app.use('/api/auth', authRoutes);
@@ -107,7 +107,7 @@ if (process.env.NODE_ENV === 'Dev') {
     });
 }
 // Api Health Check Endpoint
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
     const mongoStates = {
         0: 'disconnected',
         1: 'connected',
@@ -131,6 +131,12 @@ app.get('/health', (req, res) => {
                         isHealthy: isHealthy
                     }
                 }
+            },
+            // Get Rate Limit Info for the current IP address
+            RateLimit: {
+                ip: req.ip, // Current IP address making the request
+                count: await rateLimit.getRequestCount(req.ip), // Current request count for the IP address
+                resetTime: await rateLimit.getResetTime(req.ip) // Time in seconds until the rate limit resets for the IP address
             }
         });
 });
