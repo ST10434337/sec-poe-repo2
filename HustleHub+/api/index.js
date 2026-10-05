@@ -60,10 +60,10 @@ connectDB();
 const authRoutes = require('./routes/auth');
 
 // Limit Rates for /api routes using the rateLimiter middleware
-app.use('/api', rateLimit.rateLimiter);
+// app.use('/api', rateLimit.rateLimiter);
 
 // Auth handling middleware
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes, rateLimit.rateLimiter(25, 15)); // Apply rate limiting to auth routes
 
 // Error handling middleware
 app.use(errorHandler);

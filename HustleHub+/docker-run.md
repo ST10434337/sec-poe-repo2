@@ -2,8 +2,9 @@
 
 Docker Desktop (or another Docker Engine with Compose) must be installed and
 running. The Compose setup builds the API from `api/` and the React client from
-`app/`. MongoDB is expected to be reachable using the `MONGO_URI` in
-`docker.env`; Compose does not start a local MongoDB container.
+`app/`, and starts Redis for the API rate limiter. MongoDB is expected to be
+reachable using the `MONGO_URI` in `docker.env`; Compose does not start a local
+MongoDB container.
 
 ## Configure
 
