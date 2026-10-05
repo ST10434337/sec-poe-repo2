@@ -7,6 +7,8 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 
+const rateLimit = require("./middleware/rateLimit");
+
 const app = express();
 
 // .env variables
@@ -57,6 +59,8 @@ connectDB();
 // Routes
 const authRoutes = require('./routes/auth');
 
+// Limit Rates for /api routes using the rateLimiter middleware
+app.use('/api', rateLimit);
 
 // Auth handling middleware
 app.use('/api/auth', authRoutes);
