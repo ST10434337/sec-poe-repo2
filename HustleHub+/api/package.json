@@ -11,7 +11,7 @@
     "start": "node ./index.js",
     "dev": "nodemon index.js",
     "mkcert": "node make-certs.js"
-    },
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",

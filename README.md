@@ -3,7 +3,7 @@
 ## Submission Details
 
 **YouTube Video:** 
-[YouTube Video Testing APIs with Postman](https://youtu.be/2G8q29dcdyQ)
+[YouTube Video Testing APIs with Postman Part 1](https://youtu.be/2G8q29dcdyQ)
 
 
 ## Authors
@@ -13,7 +13,7 @@
 
 *This README* exists to walk you the marker though the systems architecture, request flow, token handling, validation approach and security rational as per Part 1's rubric.
 
-Backend Documentation containing installation steps, environment variable placement, API reference and postman test sequence is maintained in the project Readme.md: [HustleHub+/Readme.md](HustleHub+/Readme.md)
+Backend Documentation containing installation steps, environment variable placement, API reference and postman test sequence is maintained in the project Readme.md: [HustleHub+/Readme.md](HustleHub+/api/Readme.md)
 
 ---
 
