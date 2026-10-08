@@ -1,0 +1,33 @@
+const express = require('express');
+const router = express.Router();
+const requireAuth = require('../middleware/auth');
+const { allowRoles } = require('../middleware/roleAuth');
+const { ROLES } = require('../utils/roles');
+
+const {
+    listGigs,
+    getMyGigs,
+    getGigById,
+    createGig,
+    updateGig,
+    deleteGig
+} = require('../controllers/gigController');
+
+// Anyone can browse active gigs
+router.get('/', listGigs);
+
+// Freelancers can see their own gigs, including ones they deleted
+// Keep this before /:id so "my-gigs" is not treated as a gig id
+router.get('/my-gigs', requireAuth, allowRoles(ROLES.FREELANCER), getMyGigs);
+
+// Anyone can open an active gig
+// Booking still happens in the bookings routes and will require login
+router.get('/:id', getGigById);
+
+// Management: create, update and soft delete are freelancer only, ownership is checked in the controller
+router.post('/', requireAuth, allowRoles(ROLES.FREELANCER), createGig);
+router.put('/:id', requireAuth, allowRoles(ROLES.FREELANCER), updateGig);
+router.delete('/:id', requireAuth, allowRoles(ROLES.FREELANCER), deleteGig);
+
+module.exports = router;
+//The Independent Institute of Education (IIE). 2026. Information Systems 3D (INSY7314/w): Module manual. The Independent Institute of Education (Pty) Ltd.
