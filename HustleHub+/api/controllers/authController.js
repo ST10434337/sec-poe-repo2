@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const { PUBLIC_ROLES } = require('../utils/roles');
+
+// Check that a request field is a non-empty string (rejects objects such as { "$ne": null })
+const isFilledString = (value) => typeof value === 'string' && value.trim() !== '';
 
 // Generate JWT token ~> (The IIE, 2026)
 const generateToken = (userId, role) =>
@@ -21,10 +25,14 @@ const testEmailFormat = (email) => {
 // Register route handler function ~> (The IIE, 2026)
 const registerUser = async (req, res) => {
     try {
-        // Validate input
-        const { email, password, name, role } = req.body;
-        if (!email || !password || !name || !role)
+        // Validate input (req.body may be undefined when no JSON body is sent)
+        const { email, password, name, role } = req.body || {};
+        if (![email, password, name, role].every(isFilledString))
             return res.status(400).json({ message: 'All fields are required' });
+
+        // Only client and freelancer can self-register; admins are never created here
+        if (!PUBLIC_ROLES.includes(role))
+            return res.status(400).json({ message: 'Role must be client or freelancer' });
 
         let normalizedName = name.trim(); // Normalize name by trimming whitespace
 
@@ -39,7 +47,7 @@ const registerUser = async (req, res) => {
 
         // Check if user already exists
         const existing = await User.findOne({ email: normalizedEmail });
-        if (existing) return res.status(400).json({ message: 'Email already in use' });
+        if (existing) return res.status(409).json({ message: 'Email already in use' });
 
         // Create new user and generate token
         const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role });
@@ -47,6 +55,10 @@ const registerUser = async (req, res) => {
         // Send response with token and user info (excluding password)
         res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
     } catch (err) {
+
+        // Handle duplicate email from the unique index (~> two registrations at the same time)
+        if (err.code === 11000)
+            return res.status(409).json({ message: 'Email already in use' });
 
         // Handle Mongoose validation errors
         if (err instanceof mongoose.Error.ValidationError) {
@@ -73,15 +85,19 @@ const registerUser = async (req, res) => {
     // Login route handler function ~> (The IIE, 2026)
     const loginUser = async (req, res) => {
         try {
-            // Validate input
-            const { email, password } = req.body;
-            if (!email || !password) {
+            // Validate input (must be strings, so operator objects like { "$ne": null } are rejected)
+            const { email, password } = req.body || {};
+            if (!isFilledString(email) || !isFilledString(password)) {
                 return res.status(400).json({ message: 'Email and password are required' });
             }
             // Check if user exists and password matches
             const user = await User.findOne({ email: email.toLowerCase().trim() });
             if (!user || !(await user.comparePassword(password))) {
                 return res.status(401).json({ message: 'Invalid credentials' });
+            }
+            // Disabled accounts cannot log in (checked after the password, so it does not reveal which accounts exist)
+            if (user.isActive === false) {
+                return res.status(403).json({ message: 'Account is disabled' });
             }
             // Generate token and send response
             const token = generateToken(user._id, user.role);
