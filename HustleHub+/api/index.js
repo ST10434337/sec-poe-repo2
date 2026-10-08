@@ -42,7 +42,7 @@ app.use(
 app.use(
     cors({
         origin: CLIENT_ORIGIN,
-        methods: ['GET', 'POST'],//, 'PUT', 'DELETE'],  // Allow only GET and POST methods
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow all (part 2)
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );
@@ -60,10 +60,10 @@ connectDB();
 const authRoutes = require('./routes/auth');
 
 // Limit Rates for /api routes using the rateLimiter middleware
-// app.use('/api', rateLimit.rateLimiter);
+// app.use('/api', rateLimit.rateLimiter(), route);
 
 // Auth handling middleware
-app.use('/api/auth', authRoutes, rateLimit.rateLimiter(25, 15)); // Apply rate limiting to auth routes
+app.use('/api/auth', rateLimit.rateLimiter(25, 15) ,authRoutes ); // Apply rate limiting to auth routes
 
 // Error handling middleware
 app.use(errorHandler);
