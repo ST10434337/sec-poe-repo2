@@ -42,7 +42,7 @@ app.use(
 app.use(
     cors({
         origin: CLIENT_ORIGIN,
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow all (part 2)
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],  // PATCH is used by the booking status routes
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );
@@ -64,31 +64,6 @@ const authRoutes = require('./routes/auth');
 
 // Auth handling middleware
 app.use('/api/auth', rateLimit.rateLimiter(25, 15) ,authRoutes ); // Apply rate limiting to auth routes
-
-// Error handling middleware
-app.use(errorHandler);
-
-// Start the server based on the USE_HTTPS environment variable ~> (The IIE, 2026)
-if (USE_HTTPS) {
-    console.log("Starting HTTPS...");
-    const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
-    const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'localhost-cert.pem');
-
-    const httpsOptions = {
-        key: fs.readFileSync(keyPath),
-        cert: fs.readFileSync(certPath),
-    };
-
-    https.createServer(httpsOptions, app).listen(PORT, () => {
-        console.log(`Application listening on port ${PORT} (HTTPS)`);
-    });
-} else {
-    console.log("Starting HTTP...");
-    app.listen(PORT, () => {
-        console.log(`Application listening on port ${PORT}`);
-        console.log(`http://localhost:4000`)
-    });
-};
 
 // Base Defined Routes
 
@@ -145,6 +120,31 @@ app.get('/health', async (req, res) => {
 app.use((req, res) => {
     res.status(404).json({ message: 'Route not found' });
 })
+
+// Error handling middleware
+app.use(errorHandler);
+
+// Start the server based on the USE_HTTPS environment variable ~> (The IIE, 2026)
+if (USE_HTTPS) {
+    console.log("Starting HTTPS...");
+    const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
+    const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'localhost-cert.pem');
+
+    const httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+    };
+
+    https.createServer(httpsOptions, app).listen(PORT, () => {
+        console.log(`Application listening on port ${PORT} (HTTPS)`);
+    });
+} else {
+    console.log("Starting HTTP...");
+    app.listen(PORT, () => {
+        console.log(`Application listening on port ${PORT}`);
+        console.log(`http://localhost:4000`)
+    });
+};
 
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
 //  Module manual. The Independent Institute of Education (Pty) Ltd. 
