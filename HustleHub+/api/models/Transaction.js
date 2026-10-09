@@ -29,7 +29,7 @@ const transactionSchema = new mongoose.Schema({
     required: true,
     min: 1,
     max: 1000000,
-    validate: { validator: Number.isInteger, message: 'Amount must be a whole number of rand' }
+    validate: { validator: Number.isInteger, message: 'Amount must be a whole number in Rands' }
   },
 
   currency: {
@@ -51,7 +51,7 @@ const transactionSchema = new mongoose.Schema({
     default: 'simulated'
   },
 
-  // Simulated payment confirmation shown to the user, e.g. TXN-<uuid>
+  // Simulated payment confirmation shown to the user, e.g. Ref-<uuid>
   reference: {
     type: String,
     required: true,

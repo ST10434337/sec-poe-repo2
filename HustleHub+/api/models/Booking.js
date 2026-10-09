@@ -38,6 +38,13 @@ const bookingSchema = new mongoose.Schema({
     default: BOOKING_STATUS.CONFIRMED
   },
 
+  // Optional reason the client gave when cancelling
+  cancellationReason: {
+    type: String,
+    trim: true,
+    maxLength: 500
+  },
+
 }, { timestamps: true });
 
 // The client and freelancer booking lists filter on their user and sort newest first
