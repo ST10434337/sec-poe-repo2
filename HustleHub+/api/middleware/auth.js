@@ -47,6 +47,16 @@ const authorisedRoles = (...allowedRoles) => async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+
+  // Use the user id from the token to load the current account role and status
+  // thus, disabled accounts are blocked immediately
+  const user = await User.findById(payload.userId).select('role isActive');
+  if (!user) return res.status(401).json({ message: 'Invalid or expired token' });
+  if (user.isActive === false) return res.status(403).json({ message: 'Account is disabled' });
+
+  req.userId = user.id;
+  req.userRole = user.role;
+  next();
 };
 
 module.exports = { requireAuth, authorisedRoles };
