@@ -64,6 +64,7 @@ const authRoutes = require('./routes/auth');
 const gigRoutes = require('./routes/gigs');
 const bookingRoutes = require('./routes/bookings');
 const transactionRoutes = require('./routes/transactions');
+const adminRoutes = require('./routes/admin');
 
 // Limit Rates for /api routes using the rateLimiter middleware
 // app.use('/api', rateLimit.rateLimiter(), route);
@@ -79,6 +80,9 @@ app.use('/api/bookings', bookingRoutes);
 
 // Transaction and income routes (login and role checks are applied inside the router)
 app.use('/api/transactions', transactionRoutes);
+
+// Admin routes (every route is admin only)
+app.use('/api/admin', adminRoutes);
 
 // Base Defined Routes
 

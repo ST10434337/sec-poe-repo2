@@ -10,7 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./index.js",
     "dev": "nodemon index.js",
-    "mkcert": "node make-certs.js"
+    "mkcert": "node make-certs.js",
+    "create-admin": "node scripts/createAdmin.js" 
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

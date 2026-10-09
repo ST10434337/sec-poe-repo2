@@ -187,6 +187,8 @@ const registerUser = async (req, res) => {
 
     module.exports = {
         generateToken,
+        testEmailFormat, // also used by scripts/createAdmin.js
+        testPassStrength, // and this ^
         registerUser,
         loginUser,
         getCurrentUser,
