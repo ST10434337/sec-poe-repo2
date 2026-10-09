@@ -1,12 +1,37 @@
 const mongoose = require('mongoose');//(The IIE, 2026)
 const bcrypt = require('bcrypt');//(The IIE, 2026)
+const { ROLES } = require('../utils/roles');
 
 // Define the User schema
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  name: { type: String, required: true },
-  role: { type: String, enum: ['user','seller','admin'], default: 'user' },
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    lowercase: true, 
+    trim: true },
+  
+   password: { 
+     type: String, 
+     required: true 
+  },
+  name: { 
+    type: String, 
+    required: true, 
+    trim: true, 
+    maxLength: 100 
+  },
+  
+  role: { 
+    type: String, 
+    enum: Object.values(ROLES), 
+    default: ROLES.CLIENT },
+  
+  isActive: { 
+    type: Boolean, 
+    default: true 
+  }, // Admins can disable accounts; checked on login and by requireAuth
+  
 }, { timestamps: true });
 
 // Pre-save hook to hash the password before saving
