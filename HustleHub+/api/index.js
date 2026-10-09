@@ -45,7 +45,7 @@ app.use(
 app.use(
     cors({
         origin: CLIENT_ORIGIN,
-        methods: ['GET', 'POST'],//, 'PUT', 'DELETE'],  // Allow only GET and POST methods
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );

@@ -18,12 +18,17 @@ const testEmailFormat = (email) => {
     return regex.test(email);
 }
 
+// Name is Normalized by trimming whitespace
+// Email is normalized by converting to lowercase and trimming whitespace.
+// Password is validated for strength using regex. 
+// Role Defaults to 'client'. Role Can be updated later by an admin user.
+
 // Register route handler function ~> (The IIE, 2026)
 const registerUser = async (req, res) => {
     try {
         // Validate input
-        const { email, password, name, role } = req.body;
-        if (!email || !password || !name || !role)
+        const { email, password, name} = req.body;
+        if (!email || !password || !name)
             return res.status(400).json({ message: 'All fields are required' });
 
         let normalizedName = name.trim(); // Normalize name by trimming whitespace
@@ -42,10 +47,10 @@ const registerUser = async (req, res) => {
         if (existing) return res.status(400).json({ message: 'Email already in use' });
 
         // Create new user and generate token
-        const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role });
-        const token = generateToken(user._id, user.role);
+        const user = await User.create({ email: normalizedEmail, password, name: normalizedName});
+        const token = generateToken(user._id, 'client'); // Default role is 'client'
         // Send response with token and user info (excluding password)
-        res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
+        res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name } });
     } catch (err) {
 
         // Handle Mongoose validation errors
