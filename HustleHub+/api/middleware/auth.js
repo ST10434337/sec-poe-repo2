@@ -10,7 +10,7 @@ async function requireAuth(req, res, next) {
 
   const token = authHeader.slice(7);
 
-  // Verify the token using the secret key, only accepting the algorithm we sign with
+  // Verify the JWT and decode its payload so we can read the user id
   let payload;
   try {
     payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
@@ -18,8 +18,8 @@ async function requireAuth(req, res, next) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 
-  // Load the role and status from the database, so a disabled account or a changed role
-  // takes effect immediately rather than when the token expires
+  // Use the user id from the token to load the current account role and status
+  // thus, disabled accounts are blocked immediately
   const user = await User.findById(payload.userId).select('role isActive');
   if (!user) return res.status(401).json({ message: 'Invalid or expired token' });
   if (user.isActive === false) return res.status(403).json({ message: 'Account is disabled' });

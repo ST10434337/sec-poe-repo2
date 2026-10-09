@@ -59,6 +59,7 @@ connectDB();
 // Routes
 const authRoutes = require('./routes/auth');
 const gigRoutes = require('./routes/gigs');
+const bookingRoutes = require('./routes/bookings');
 
 // Limit Rates for /api routes using the rateLimiter middleware
 // app.use('/api', rateLimit.rateLimiter(), route);
@@ -68,6 +69,9 @@ app.use('/api/auth', rateLimit.rateLimiter(25, 15) ,authRoutes ); // Apply rate 
 
 // Gig routes (login and role checks are applied inside the router)
 app.use('/api/gigs', gigRoutes);
+
+// Booking routes (login and role checks are applied inside the router)
+app.use('/api/bookings', bookingRoutes);
 
 // Base Defined Routes
 
