@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { requireAuth, allowRoles } = require('../middleware/auth');
+const { ROLES } = require('../utils/roles');
 
 const {
     registerUser,
@@ -9,23 +11,20 @@ const {
     updateUserRole
 } = require('../controllers/authController');
 
-const { requireAuth, allowRoles } = require('../middleware/auth');
-const { ROLES } = require('../utils/roles');
 
-// Register route ~> (The IIE, 2026)
+// Register and login are public. A user is not logged in yet ~> (The IIE, 2026)
 router.post('/register', registerUser);
-
-// Login route ~> (The IIE, 2026)
 router.post('/login', loginUser);
 
 // Example: get current user (protected)
-router.get('/me', requireAuth, getCurrentUser);
+router.get('/me', getCurrentUser);
 
-// Authenticated clients can upgrade their own account.
-router.post('/become-freelancer', requireAuth, becomeFreelancer);
+// Logged-in clients can upgrade themselves to freelancer.
+// Including FREELANCER makes the route safe to call again after upgrading.
+router.post('/become-freelancer', allowRoles(ROLES.CLIENT, ROLES.FREELANCER), becomeFreelancer);
 
 // Admin can update user roles (protected)
-router.patch('/users/:userId/role', requireAuth, updateUserRole);
+router.patch('/users/:userId/role',allowRoles(ROLES.ADMIN), updateUserRole);
 
 module.exports = router;
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 

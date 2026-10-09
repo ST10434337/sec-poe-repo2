@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Gig = require('../models/Gig');
-const { ROLES } = require('../utils/roles');
 const { GIG_CATEGORIES } = require('../utils/gigCategories');
 const { escapeRegex } = require('../utils/sanitize');
 const { parsePagination, pageInfo } = require('../utils/pagination');
@@ -98,10 +97,8 @@ const getGigById = async (req, res) => {
     const gig = await Gig.findById(req.params.id);
     if (!gig) return res.status(404).json({ message: 'Gig not found' });
 
-    // This route is public, so req.userId is usually empty. Owners see deleted gigs through /my-gigs
-    const canSeeInactive = Boolean(req.userId)
-        && (gig.freelancer.equals(req.userId) || req.userRole === ROLES.ADMIN);
-    if (!gig.isActive && !canSeeInactive)
+    // Public users can only view active gigs. Owners see deleted gigs through /my-gigs.
+    if (!gig.isActive)
         return res.status(404).json({ message: 'Gig not found' });
 
     await gig.populate('freelancer', 'name');
