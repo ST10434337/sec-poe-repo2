@@ -14,6 +14,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 // Example: get current user (protected)
+// router.get('/me', requireAuth, getCurrentUser);
 router.get('/me', requireAuth, getCurrentUser);
 
 module.exports = router;

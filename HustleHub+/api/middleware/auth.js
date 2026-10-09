@@ -30,12 +30,14 @@ function requireAuth(req, res, next) {
 
 // RBAC (IIE, 2026)
 const authorisedRoles = (...allowedRoles) => {
-    requireAuth(req, res, () => {
-      if (!req.user || !allowedRoles.includes(req.user.role)){
-        return res.status(403).json({message: 'Access Denied'});
-      }
-      next();
+    return (req, res, next) => {
+        requireAuth(req, res, () => {
+            if (!req.user || !allowedRoles.includes(req.user.role)){
+                return res.status(403).json({message: 'Access Denied'});
+            }
+            next();
     });
+  };
 };
 
 
