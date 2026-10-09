@@ -25,7 +25,7 @@ router.get('/me', requireAuth, getCurrentUser);
 router.post('/become-freelancer', requireAuth, becomeFreelancer);
 
 // Admin can update user roles (protected)
-router.patch('/users/:userId/role', allowRoles(ROLES.ADMIN), updateUserRole);
+router.patch('/users/:userId/role', requireAuth, updateUserRole);
 
 module.exports = router;
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
