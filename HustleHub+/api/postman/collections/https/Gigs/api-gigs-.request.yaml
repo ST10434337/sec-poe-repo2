@@ -1,0 +1,5 @@
+$kind: http-request
+name: api/gigs/
+url: https://localhost:4000/api/gigs/
+method: GET
+order: 1000

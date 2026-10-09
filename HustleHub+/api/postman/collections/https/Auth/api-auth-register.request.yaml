@@ -13,7 +13,7 @@ body:
 
     \    \"password\": \"Pass123!\",\r
 
-    \    \"role\":\"user\"\r
+    \    \"role\":\"client\"\r
 
     }"
-order: 80380357860250
+order: 1000
