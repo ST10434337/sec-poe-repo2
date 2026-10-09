@@ -50,7 +50,7 @@ const registerUser = async (req, res) => {
         const user = await User.create({ email: normalizedEmail, password, name: normalizedName});
         const token = generateToken(user._id, 'client'); // Default role is 'client'
         // Send response with token and user info (excluding password)
-        res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name } });
+        res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
     } catch (err) {
 
         // Handle Mongoose validation errors
@@ -115,11 +115,67 @@ const registerUser = async (req, res) => {
         }
     };
 
+    const becomeFreelancer = async (req, res) => {
+        try {
+            const user = await User.findById(req.userId);
+            if (!user) return res.status(404).json({ message: 'User not found' });
+            if (user.role === 'freelancer') {
+                return res.json({
+                    token: generateToken(user._id, user.role),
+                    user: { id: user._id, email: user.email, name: user.name, role: user.role }
+                });
+            }
+            if (user.role !== 'client') {
+                return res.status(409).json({ message: 'Only client accounts can become freelancers' });
+            }
+
+            user.role = 'freelancer';
+            await user.save();
+
+            res.json({
+                token: generateToken(user._id, user.role),
+                user: { id: user._id, email: user.email, name: user.name, role: user.role }
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Server error' });
+        }
+    };
+
+    const updateUserRole = async (req, res) => {
+        const { userId } = req.params;
+        const { role } = req.body || {};
+
+        if (!mongoose.isValidObjectId(userId)) {
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+        if (!['freelancer', 'admin'].includes(role)) {
+            return res.status(400).json({ message: 'Role must be freelancer or admin' });
+        }
+
+        try {
+            const user = await User.findById(userId);
+            if (!user) return res.status(404).json({ message: 'User not found' });
+
+            user.role = role;
+            await user.save();
+
+            res.json({
+                user: { id: user._id, email: user.email, name: user.name, role: user.role }
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Server error' });
+        }
+    };
+
     module.exports = {
         generateToken,
         registerUser,
         loginUser,
-        getCurrentUser
+        getCurrentUser,
+        becomeFreelancer,
+        updateUserRole
     };
 
 // GeeksforGeeks (2026) JavaScript - Validate Password in JS.
