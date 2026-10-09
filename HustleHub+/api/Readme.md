@@ -143,12 +143,11 @@ Application starts
 {
   "email": "String",
   "name": "String",
-  "password": "String",
-  "role": "String (user | seller | admin)"
+  "password": "String"
 }
 ```
 *Validation Rules*
-- All 4 fields are required.
+- All 3 fields are required.
 - The email address must use a valid email format.
 - Email addresses are stored in lowercase and trimmed.
 - The password must be at least **8 characters** long.
@@ -157,10 +156,7 @@ Application starts
   - A lowercase letter
   - A number
   - One special character from `@ $ ! % * ? &`
-- The role must be one of:
-  - `user`
-  - `seller`
-  - `admin`
+- New accounts receive the `client` role by default. The role is not accepted from registration requests.
 
 
 **Success — 201**
@@ -184,6 +180,43 @@ Application starts
 | `400` | `{ "message": "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character" }` | Password does not meet the requirements |
 | `400` | `{ "message": "Email already in use" }` | Email already exists |
 | `400` | `{ "message": "Validation error" }` | Schema validation failed |
+| `500` | `{ "message": "Server error" }` | Unexpected server-side error |
+
+---
+
+### POST /api/auth/become-freelancer
+
+Changes the authenticated client's own role to `freelancer`. Send the existing
+access token as a bearer token; no role is accepted in the request body. The
+response includes a refreshed token containing the new role.
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `401` | `{ "message": "No Token Provided" }` | Authentication token is missing or malformed |
+| `404` | `{ "message": "User not found" }` | The account no longer exists |
+| `409` | `{ "message": "Only client accounts can become freelancers" }` | The account has another role |
+| `500` | `{ "message": "Server error" }` | Unexpected server-side error |
+
+### PATCH /api/admin/users/:userId/role
+
+Admin-only endpoint for assigning a user the `freelancer` or `admin` role.
+Send a valid admin bearer token and a JSON body such as
+`{ "role": "admin" }` or `{ "role": "freelancer" }`. The target user's existing
+token does not change; they should log in again to receive a token with the new
+role. Authorization checks the current role stored in the database.
+
+An initial admin must be provisioned through a trusted database/admin process;
+this endpoint cannot grant the first admin role.
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid user ID" }` | The path parameter is not a valid MongoDB ID |
+| `400` | `{ "message": "Role must be freelancer or admin" }` | Unsupported role value |
+| `401` | `{ "message": "No Token Provided" }` | Authentication token is missing or malformed |
+| `403` | `{ "message": "Access Denied" }` | The current user is not an admin |
+| `404` | `{ "message": "User not found" }` | The target account does not exist |
 | `500` | `{ "message": "Server error" }` | Unexpected server-side error |
 
 ---
@@ -318,4 +351,3 @@ Returns basic application information.
   "environment": "String"
 }
 ```
-

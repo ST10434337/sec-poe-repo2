@@ -30,8 +30,8 @@ HustleHub+ follows the MERN stack. Part 1 delivers the secure backend foundation
 **Cross-Origin Resource Sharing (CORS)** is currently scoped to `GET` and `POST` only. Later in part 2 `PUT` and `DELETE` will be used for gig management endpoints alike.
 
 **User roles:**
-- user (Client)
-- seller (Freelancer)
+- client (Client)
+- freelancer (Freelancer)
 - admin (Administrator)
 
 Role-based access control (RBAC) restricts what each role can do, for part 1 as per instructions it only stores the roles and includes it in the JWT payload, see under Token Usage for more info.
@@ -157,7 +157,7 @@ jwt.sign(
 - *Registration* also checks the format before creating a user with regex-based email formatting check (`400 `with `{ "message": "Invalid email format" }`) & a password strength check requiring at least 8 characters with upper-case letter, lowercase letter, number and special character (`400` with a message describing the rule).
 - *Duplicate email* returns `400` with `{ "message": "Email already in use" }`.
 - *Login* requires `email` and `password`. If either is missing the API returns `400` with `{ "message": "Email and password are required" }`.
-- *Mongoose* enforces schema-level rules: required fields, a unique & lowercased/trimmed email and an enumerated `role` of (`user`/`seller`/`admin`).
+- *Mongoose* enforces schema-level rules: required fields, a unique & lowercased/trimmed email and an enumerated `role` of (`client`/`freelancer`/`admin`).
 
 **Request-level hardening**
 - *Helmet* applies Content Security Policy with these directives:

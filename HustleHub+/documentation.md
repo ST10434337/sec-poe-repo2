@@ -19,8 +19,9 @@ counter approach is based on Frontend Highlights (2024):
 
 The limiter stores a counter in Redis using the mounted base path and the
 client IP. The Redis client uses `REDIS_URL`; Docker Compose sets this to
-`redis://redis:6379`. Outside Compose, it defaults to
-`redis://127.0.0.1:6379`, so a local Redis server must be running or
+`redis://redis:6379` for the API container and publishes Redis on
+`127.0.0.1:6379` for local API development. Outside Compose, it defaults to
+`redis://127.0.0.1:6379`, so Redis must be running locally or
 `REDIS_URL` must point to another Redis instance.
 
 To limit the auth routes to 25 requests per IP every 15 minutes, register the
