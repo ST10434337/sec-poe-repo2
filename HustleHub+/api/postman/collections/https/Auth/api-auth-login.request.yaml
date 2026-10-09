@@ -20,7 +20,8 @@ scripts:
 
       \r
 
-      // 2. Extract the token (adjust 'token' if your API uses 'accessToken' or 'jwt')\r
+      // 2. Extract the token (adjust 'token' if your API uses 'accessToken' or
+      'jwt')\r
 
       const token = response.token;\r
 
@@ -30,4 +31,4 @@ scripts:
 
       pm.environment.set(\"auth_token\", token);\r\n"
     language: text/javascript
-order: 1133304725871694
+order: 2000

@@ -55,8 +55,8 @@ const registerUser = async (req, res) => {
         if (existing) return res.status(409).json({ message: 'Email already in use' });
 
         // Create new user and generate token
-        const user = await User.create({ email: normalizedEmail, password, name: normalizedName});
-        const token = generateToken(user._id, 'client'); // Default role is 'client'
+        const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role });
+        const token = generateToken(user._id, user.role);
         // Send response with token and user info (excluding password)
         res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
     } catch (err) {
