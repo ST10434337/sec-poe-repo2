@@ -3,11 +3,12 @@ const Redis = require('ioredis');   // (Frontend Highlights, 2024)
 const redis = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');  // (Frontend Highlights, 2024)
 
 // Rate limiter using Redis
-const rateLimiter = (limit = 100, windowTime = 15) => { // Default: 100 requests per 15 minutes
+// name keeps each limiter's counter separate
+const rateLimiter = (limit = 100, windowTime = 15, name = 'api') => { // Default: 100 requests per 15 minutes
     return async (req, res, next) => {
         const ip = req.ip;
         const currentTime = Date.now();
-        const key = `rate-limit:${req.baseUrl}:${ip}`;
+        const key = `rate-limit:${name}:${ip}`;
 
         const wt = windowTime * 60; // 15 minutes in seconds
 
