@@ -1,8 +1,8 @@
 
 TO DO:
 - [ ] CSP + Headers thing
-- [ ] API Tests **Postman + Newman** (christopher is busy) ... Not unit tests 😅
-- [ ] Front End
+- [ ] API Tests **Postman + Newman**  ... Not unit tests 😅
+- [ ] Front End (christopher busy) 
 - [ ] Front End tests (component behaviour and user interaction)
 - [ ] Update API README
 - [ ] Update this README
