@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const { PUBLIC_ROLES } = require('../utils/roles');
+const { ROLES, PUBLIC_ROLES } = require('../utils/roles');
+const { stripTags } = require('../utils/sanitize');
 
 // Check that a request field is a non-empty string (rejects objects such as { "$ne": null })
 const isFilledString = (value) => typeof value === 'string' && value.trim() !== '';
@@ -22,24 +23,27 @@ const testEmailFormat = (email) => {
     return regex.test(email);
 }
 
-// Name is Normalized by trimming whitespace
+// Name is Normalized by stripping HTML tags and trimming whitespace
 // Email is normalized by converting to lowercase and trimming whitespace.
-// Password is validated for strength using regex. 
-// Role Defaults to 'client'. Role Can be updated later by an admin user.
+// Password is validated for strength using regex.
+// Role is optional and defaults to 'client'. Role Can be updated later by an admin user.
 
 // Register route handler function ~> (The IIE, 2026)
 const registerUser = async (req, res) => {
     try {
         // Validate input (req.body may be undefined when no JSON body is sent)
         const { email, password, name, role } = req.body || {};
-        if (![email, password, name, role].every(isFilledString))
-            return res.status(400).json({ message: 'All fields are required' });
+        if (![email, password, name].every(isFilledString))
+            return res.status(400).json({ message: 'Email, password and name are required' });
 
         // Only client and freelancer can self-register; admins are never created here
-        if (!PUBLIC_ROLES.includes(role))
+        if (role !== undefined && !PUBLIC_ROLES.includes(role))
             return res.status(400).json({ message: 'Role must be client or freelancer' });
 
-        let normalizedName = name.trim(); // Normalize name by trimming whitespace
+        // Strip HTML tags from the display name; it must still have text left afterwards
+        let normalizedName = stripTags(name).trim();
+        if (!normalizedName || normalizedName.length > 100)
+            return res.status(400).json({ message: 'Name must be 1 to 100 characters of text' });
 
         let normalizedEmail = email.toLowerCase().trim(); // Normalize email by converting to lowercase and trimming whitespace
         // Check email format
@@ -55,7 +59,7 @@ const registerUser = async (req, res) => {
         if (existing) return res.status(409).json({ message: 'Email already in use' });
 
         // Create new user and generate token
-        const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role });
+        const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role: role ?? ROLES.CLIENT });
         const token = generateToken(user._id, user.role);
         // Send response with token and user info (excluding password)
         res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });

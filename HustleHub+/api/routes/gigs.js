@@ -12,21 +12,25 @@ const {
     deleteGig
 } = require('../controllers/gigController');
 
-// Public: Anyone can browse active gigs
-router.get('/', listGigs);
+// Rate limits specific to pages
+const browseLimit = rateLimit.rateLimiter(100, 15, 'gig-browse');
+const writeLimit = rateLimit.rateLimiter(25, 15, 'gig-write');
 
-// Public: Anyone can open an active gig
-// Booking still happens in the bookings routes and will require login
-router.get('/:id', getGigById);
+// Public: Anyone can browse active gigs
+router.get('/', browseLimit ,listGigs);
 
 // Freelancers can see their own gigs, including ones they deleted
 // Keep this before /:id so "my-gigs" is not treated as a gig id
-router.get('/my-gigs', allowRoles(ROLES.FREELANCER), getMyGigs);
+router.get('/my-gigs', browseLimit   ,allowRoles(ROLES.FREELANCER), getMyGigs);
+
+// Public: Anyone can open an active gig
+// Booking still happens in the bookings routes and will require login
+router.get('/:id',browseLimit ,getGigById);
 
 // Management: create, update and soft delete are freelancer only, ownership is checked in the controller
-router.post('/', allowRoles(ROLES.FREELANCER), createGig);
-router.put('/:id', allowRoles(ROLES.FREELANCER), updateGig);
-router.delete('/:id', allowRoles(ROLES.FREELANCER), deleteGig);
+router.post('/',writeLimit, allowRoles(ROLES.FREELANCER), createGig);
+router.put('/:id', writeLimit, allowRoles(ROLES.FREELANCER), updateGig);
+router.delete('/:id', writeLimit, allowRoles(ROLES.FREELANCER), deleteGig);
 
 module.exports = router;
 //The Independent Institute of Education (IIE). 2026. Information Systems 3D (INSY7314/w): Module manual. The Independent Institute of Education (Pty) Ltd.

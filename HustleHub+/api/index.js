@@ -53,6 +53,10 @@ app.use(
 // Parse incoming JSON requests
 app.use(express.json());
 
+// Reject bodies with keys starting with $ or containing a dot (NoSQL injection), before any route runs
+const sanitizeBody = require('./middleware/sanitizeBody');
+app.use(sanitizeBody);
+
 // Middleware
 const errorHandler = require('./middleware/errorHandler');
 
@@ -70,19 +74,22 @@ const adminRoutes = require('./routes/admin');
 // app.use('/api', rateLimit.rateLimiter(), route);
 
 // Auth handling middleware
-app.use('/api/auth', rateLimit.rateLimiter(25, 15) ,authRoutes ); // Apply rate limiting to auth routes
+app.use('/api/auth', rateLimit.rateLimiter(25, 15, 'login') ,authRoutes ); // Apply rate limiting to auth routes
 
 // Gig routes (login and role checks are applied inside the router)
+// Rate limits applied in routes file
 app.use('/api/gigs', gigRoutes);
 
 // Booking routes (login and role checks are applied inside the router)
+// Rate limits applied in routes file
 app.use('/api/bookings', bookingRoutes);
 
 // Transaction and income routes (login and role checks are applied inside the router)
+// No rate limit as transactions can refresh often
 app.use('/api/transactions', transactionRoutes);
 
 // Admin routes (every route is admin only)
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', rateLimit.rateLimiter(25, 15, 'admin'), adminRoutes);
 
 // Base Defined Routes
 

@@ -16,8 +16,8 @@ const {
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 
-// Example: get current user (protected)
-router.get('/me', getCurrentUser);
+// Get current user (protected; disabled accounts are blocked by requireAuth)
+router.get('/me', requireAuth, getCurrentUser);
 
 // Logged-in clients can upgrade themselves to freelancer.
 // Including FREELANCER makes the route safe to call again after upgrading.
