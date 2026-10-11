@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { allowRoles } = require('../middleware/auth');
 const { ROLES } = require('../utils/roles');
+const rateLimit = require('../middleware/rateLimit');
 
 const {
     createBooking,
