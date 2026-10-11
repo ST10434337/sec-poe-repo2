@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const Gig = require('../models/Gig');
 const { GIG_CATEGORIES } = require('../utils/gigCategories');
-const { escapeRegex } = require('../utils/sanitize');
+const { escapeRegex, stripTags } = require('../utils/sanitize');
 const { parsePagination, pageInfo } = require('../utils/pagination');
 
 // Only these fields may come from the client; owner and active status are set by the API
 const EDITABLE_FIELDS = ['title', 'description', 'category', 'price'];
+// Free-text fields that have HTML tags stripped before they are checked and saved
+const TEXT_FIELDS = ['title', 'description'];
 const MAX_SEARCH_LENGTH = 100;
 
 // Copy only the allow-listed fields that were sent in the body, for security
@@ -14,7 +16,30 @@ const pickEditableFields = (body) => {
     for (const field of EDITABLE_FIELDS) {
         if (body[field] !== undefined) fields[field] = body[field];
     }
+    for (const field of TEXT_FIELDS) {
+        if (typeof fields[field] === 'string') fields[field] = stripTags(fields[field]).trim();
+    }
     return fields;
+};
+
+const isTextOfLength = (value, min, max) =>
+    typeof value === 'string' && value.length >= min && value.length <= max;
+
+// Check the gig fields before saving. Returns error or null if all is fine
+// RequireALl true on create ( all needed ) false on update (only check sent fields)
+const validateGigFields = (fields, requireAll) => {
+    if (requireAll && EDITABLE_FIELDS.some((field) => fields[field] === undefined))
+        return 'Title, description, category and price are required';
+    if (fields.title !== undefined && !isTextOfLength(fields.title, 3, 100))
+        return 'Title must be text of 3 to 100 characters';
+    if (fields.description !== undefined && !isTextOfLength(fields.description, 10, 2000))
+        return 'Description must be text of 10 to 2000 characters';
+    if (fields.category !== undefined && !GIG_CATEGORIES.includes(fields.category))
+        return 'Invalid category';
+    // Must be a real number, reject like "200"
+    if (fields.price !== undefined && !(Number.isInteger(fields.price) && fields.price >= 1 && fields.price <= 1000000))
+        return 'Price must be a whole number from 1 to 1000000';
+    return null;
 };
 
 // Find an active gig and make sure the logged-in freelancer owns it ~> (The IIE, 2026)
@@ -108,6 +133,9 @@ const getGigById = async (req, res) => {
 // POST /api/gigs - create a gig owned by the logged-in freelancer ~> (The IIE, 2026)
 const createGig = async (req, res) => {
     const fields = pickEditableFields(req.body || {});
+    const error = validateGigFields(fields, true);
+    if (error) return res.status(400).json({ message: error });
+
     const gig = await Gig.create({ ...fields, freelancer: req.userId });
     res.status(201).json({ gig });
 };
@@ -120,6 +148,9 @@ const updateGig = async (req, res) => {
     const fields = pickEditableFields(req.body || {});
     if (Object.keys(fields).length === 0)
         return res.status(400).json({ message: 'No editable fields provided' });
+
+    const error = validateGigFields(fields, false);
+    if (error) return res.status(400).json({ message: error });
 
     // save() runs the schema validators, unlike findByIdAndUpdate by default
     gig.set(fields);

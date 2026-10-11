@@ -6,6 +6,7 @@ const { createBookingWithTransaction, changeBookingStatus } = require('../servic
 const { parsePagination, pageInfo } = require('../utils/pagination');
 const { ROLES } = require('../utils/roles');
 const { BOOKING_STATUS, TRANSACTION_STATUS } = require('../utils/statuses');
+const { stripTags } = require('../utils/sanitize');
 
 // Freelancer status flow: confirmed can only move to in progress, and in progress can only move to completed 
 const FREELANCER_NEXT_STATUS = {
@@ -18,8 +19,9 @@ const UPDATED_ELSEWHERE = 'Booking was updated by another request. Refresh and t
 // POST /api/bookings - a client books an active gig, which also creates its transaction
 const createBooking = async (req, res) => {
     // Only gigId is read from the body; client, freelancer, price and status are set by the server
+    // Must be a 24-character hex string; the string check also rejects objects like { "_bsontype": "ObjectId" }
     const { gigId } = req.body || {};
-    if (!mongoose.isObjectIdOrHexString(gigId))
+    if (typeof gigId !== 'string' || !mongoose.isObjectIdOrHexString(gigId))
         return res.status(400).json({ message: 'Invalid gig id' });
 
     const gig = await Gig.findById(gigId);
@@ -136,6 +138,11 @@ const cancelBooking = async (req, res) => {
     if (reason != null && typeof reason !== 'string')
         return res.status(400).json({ message: 'Reason must be text' });
 
+    // Strip HTML tags and spaces before checking the length 
+    const cleanReason = typeof reason === 'string' ? stripTags(reason).trim() : '';
+    if (cleanReason.length > 500)
+        return res.status(400).json({ message: 'Reason must be 500 characters or less' });
+
     // Find only bookings made by this client; other users' bookings stay hidden as 404
     const booking = await Booking.findOne({ _id: req.params.id, client: req.userId });
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
@@ -144,8 +151,8 @@ const cancelBooking = async (req, res) => {
     if (booking.status !== BOOKING_STATUS.CONFIRMED)
         return res.status(400).json({ message: 'Only confirmed bookings can be cancelled' });
 
-    // Store the reason only when the client actually typed one
-    const extraFields = reason && reason.trim() ? { cancellationReason: reason } : {};
+    // Store the reason only when some text is left after cleaning
+    const extraFields = cleanReason ? { cancellationReason: cleanReason } : {};
 
     const result = await changeBookingStatus(
         booking._id, 

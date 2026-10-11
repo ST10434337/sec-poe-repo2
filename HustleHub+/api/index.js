@@ -53,6 +53,10 @@ app.use(
 // Parse incoming JSON requests
 app.use(express.json());
 
+// Reject bodies with keys starting with $ or containing a dot (NoSQL injection), before any route runs
+const sanitizeBody = require('./middleware/sanitizeBody');
+app.use(sanitizeBody);
+
 // Middleware
 const errorHandler = require('./middleware/errorHandler');
 
