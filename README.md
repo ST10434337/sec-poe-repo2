@@ -1,9 +1,9 @@
 
 TO DO:
 - [ ] CSP + Headers thing
-- [ ] API unit testing (christopher is busy)
+- [ ] API Tests **Postman + Newman** (christopher is busy) ... Not unit tests 😅
 - [ ] Front End
-- [ ] Front End tests
+- [ ] Front End tests (component behaviour and user interaction)
 - [ ] Update API README
 - [ ] Update this README
 - [ ] Record Video
