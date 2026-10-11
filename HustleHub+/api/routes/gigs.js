@@ -21,7 +21,7 @@ router.get('/', browseLimit ,listGigs);
 
 // Freelancers can see their own gigs, including ones they deleted
 // Keep this before /:id so "my-gigs" is not treated as a gig id
-router.get('/my-gigs', writeLimit ,allowRoles(ROLES.FREELANCER), getMyGigs);
+router.get('/my-gigs', browseLimit   ,allowRoles(ROLES.FREELANCER), getMyGigs);
 
 // Public: Anyone can open an active gig
 // Booking still happens in the bookings routes and will require login
