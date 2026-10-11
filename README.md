@@ -1,3 +1,19 @@
+
+TO DO:
+- [ ] CSP + Headers thing
+- [ ] API unit testing (christopher is busy)
+- [ ] Front End
+- [ ] Front End tests
+- [ ] Update API README
+- [ ] Update this README
+- [ ] Record Video
+- [ ] Check Refs and other last checks
+
+
+
+
+
+
 # HustleHub+ - Part 1 Submission
 
 ## Submission Details
