@@ -3,7 +3,7 @@
 **Student numbers:** ST10443441, ST10294763, ST10434337  
 **Stack:** React, React Router, Vite, Node.js, Express, MongoDB, Mongoose and Redis  
 
-Youtube video link: 
+Youtube video link: [Link](https://youtu.be/xwSR9-3D9n8)
 
 ---
 ## Documentation contained in this repo
