@@ -1,0 +1,17 @@
+$kind: http-request
+name: DELETE /api/admin/gigs/:id
+url: "{{base_url}}/api/admin/gigs/{{moderation_gig_id}}"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('admin can moderate and soft-delete any gig', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().message).to.eql('Gig deleted');
+      });
+    language: text/javascript
+order: 3000

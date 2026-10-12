@@ -1,0 +1,30 @@
+$kind: http-request
+name: POST /api/gigs (create moderation gig)
+url: "{{base_url}}/api/gigs"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Postman moderation gig",
+      "description": "A second test gig reserved for admin moderation.",
+      "category": "other",
+      "price": 150
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('creates the moderation fixture gig', function () {
+        pm.response.to.have.status(201);
+        pm.expect(body.gig._id).to.be.a('string');
+        pm.environment.set('moderation_gig_id', body.gig._id);
+      });
+    language: text/javascript
+order: 5000

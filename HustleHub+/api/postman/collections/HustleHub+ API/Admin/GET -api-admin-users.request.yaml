@@ -1,0 +1,23 @@
+$kind: http-request
+name: GET /api/admin/users
+url: "{{base_url}}/api/admin/users?page=1&limit=10"
+method: GET
+queryParams:
+  page: "1"
+  limit: "10"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('admin can list users without password fields', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.users).to.be.an('array');
+        body.users.forEach(function (user) { pm.expect(user).not.to.have.property('password'); });
+        pm.expect(body).to.include.all.keys('page', 'limit', 'total', 'totalPages');
+      });
+    language: text/javascript
+order: 1000

@@ -1,0 +1,44 @@
+name: HustleHub+ API tests
+values:
+  - key: base_url
+    value: 'https://localhost:4000'
+  - key: auth_token
+    value: ''
+  - key: client_token
+    value: ''
+  - key: freelancer_token
+    value: ''
+  - key: admin_token
+    value: ''
+  - key: client_email
+    value: postman-client@example.com
+  - key: client_name
+    value: Postman Client
+  - key: client_password
+    value: Pass123!
+  - key: freelancer_email
+    value: postman-freelancer@example.com
+  - key: freelancer_name
+    value: Postman Freelancer
+  - key: freelancer_password
+    value: Pass123!
+  - key: admin_email
+    value: admin@example.com
+  - key: admin_name
+    value: ''
+  - key: admin_password
+    value: Pass123!
+  - key: client_user_id
+    value: ''
+  - key: freelancer_user_id
+    value: ''
+  - key: gig_id
+    value: ''
+  - key: moderation_gig_id
+    value: ''
+  - key: booking_id
+    value: ''
+  - key: transaction_id
+    value: ''
+  - key: cancel_booking_id
+    value: ''

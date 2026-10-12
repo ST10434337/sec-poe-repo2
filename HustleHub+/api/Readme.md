@@ -17,6 +17,7 @@ Download and install it from [here](https://www.mongodb.com/products/self-manage
 
 Further please ensure you have a Mongodb running and have a connection setup and running. A Database "hustlehub" will be created and used to store data.
 
+The Api Has a setup that allows the use of multiple .env files, the .env file has all the shared variables like PORT, APP_NAME etc. while .env.Testing has the MongoUri for a Testing Server. This Allows the use of dedicated testing, development and production databases.
 
 ## 🆕 First-Time Setup
 
@@ -25,7 +26,7 @@ If you are running the application for the **first time**, you need to generate 
 Run:
 
 ```bash
-cd HustleHub+
+cd HustleHub+/api
 npm install
 npm run mkcert
 ```
@@ -40,7 +41,7 @@ This only needs to be done during the initial setup, unless the certificates nee
 For development, use:
 
 ```bash
-cd HustleHub+
+cd HustleHub+/api
 npm run dev
 ```
 
@@ -53,10 +54,20 @@ Development mode is recommended when actively working on the application, as it 
 For normal use, start the application with:
 
 ```bash
-cd HustleHub+
+cd HustleHub+/api
 npm start
 ```
 
+---
+
+## 🧪 Running the Tests
+
+The Tests will spin up a dedicated Testing Server and database and then cleanup after itself. This means that there will be no lasting trace of the testing server. 
+
+```bash
+cd HustleHub+/api
+npm run test
+```
 ---
 
 ## ⚡ Quick Start
@@ -64,23 +75,30 @@ npm start
 ### First-Time Launch
 
 ```bash
-cd HustleHub+
+cd HustleHub+/api
 npm install
 npm run mkcert
+npm run create-admin  // Creates an Admin user based on the .env variables provided
 npm run dev
 ```
 
 ### Development
 
 ```bash
-cd HustleHub+
+cd HustleHub+/api
 npm run dev
+```
+### Testing 
+
+```bash
+cd HustleHub+/api
+npm run test
 ```
 
 ### Normal Launch
 
 ```bash
-cd HustleHub+
+cd HustleHub+/api
 npm start
 ```
 
@@ -90,10 +108,25 @@ npm start
 
 | Purpose                  | Command          |
 | ------------------------ | ---------------- |
-| 🆕 npm Install           | `npm install`
+| 🆕 npm Install           | `npm install`   |
 | 🆕 Generate certificates | `npm run mkcert` |
+| 🆕 Create Admin          | `npm run create-admin` |
 | 💻 Development mode      | `npm run dev`    |
 | ▶️ Normal start          | `npm start`      |
+| 🧪 Tests                 | `npm run test`   |
+
+### Creating the first admin
+
+`npm run create-admin` is used to create the initial administrator account for the app. Before running it, make sure your environment variables are set in the relevant `.env` file, especially the admin email, name, and password values expected by the script.
+
+Required admin variables:
+- `ADMIN_EMAIL` - the email address for the first admin account
+- `ADMIN_NAME` - the display name for the admin account
+- `ADMIN_PASSWORD` - the password used to create the admin account
+
+If the database is empty or no admin account exists yet, the script creates the first admin user. It is intended for initial setup, not for everyday user creation.
+
+Otherwise an Admin can be added manually to the db by a db admin.
 
 ---
 
@@ -225,7 +258,7 @@ this endpoint cannot grant the first admin role.
 
 **Postman screenshot of successful login**
 
-![Screenshot in postman](../Images/API_Postman_test_api_auth_login.png)
+![Screenshot in postman](../../Images/API_Postman_test_api_auth_login.png)
 
 Authenticates an existing user and returns a JWT authentication token.
 
@@ -296,6 +329,593 @@ The user's password hash is never returned by the API.
 | `401` | `{ "message": "Invalid or expired token" }` | Token is invalid or expired |
 | `404` | `{ "message": "User not found" }` | The user associated with the token no longer exists |
 | `500` | `{ "message": "Server error" }` | Unexpected server-side error |
+
+---
+
+## Gigs
+
+### GET /api/gigs
+
+Returns all active gigs with optional search and category filtering.
+
+**Query Parameters**
+- `q` - text search against gig title and description
+- `category` - one of the allowed gig categories
+- `page` - page number for pagination
+- `limit` - page size for pagination
+
+**Success — 200**
+```json
+{
+  "gigs": [
+    {
+      "_id": "String",
+      "title": "String",
+      "description": "String",
+      "category": "String",
+      "price": 250,
+      "freelancer": { "name": "String" },
+      "isActive": true,
+      "createdAt": "Date"
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 42,
+  "pages": 5
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Search must be text of up to 100 characters" }` | Invalid search query |
+| `400` | `{ "message": "Invalid category" }` | Category not allowed |
+
+---
+
+### GET /api/gigs/my-gigs
+
+Returns every gig owned by the authenticated freelancer, including soft-deleted gigs.
+
+**Headers**
+```http
+Authorization: ******
+```
+
+**Success — 200**
+```json
+{
+  "gigs": [
+    {
+      "_id": "String",
+      "title": "String",
+      "category": "String",
+      "price": 500,
+      "isActive": false
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 1,
+  "pages": 1
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `401` | `{ "message": "No Token Provided" }` | Authentication token is missing |
+| `403` | `{ "message": "Access Denied" }` | User is not a freelancer |
+
+---
+
+### GET /api/gigs/:id
+
+Returns a single active gig by ID. Soft-deleted gigs are hidden from public access.
+
+**Success — 200**
+```json
+{
+  "gig": {
+    "_id": "String",
+    "title": "String",
+    "description": "String",
+    "category": "String",
+    "price": 200,
+    "freelancer": { "name": "String" },
+    "isActive": true
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid gig id" }` | ID is malformed |
+| `404` | `{ "message": "Gig not found" }` | Gig does not exist or is inactive |
+
+---
+
+### POST /api/gigs
+
+Creates a new gig for the authenticated freelancer.
+
+**Headers**
+```http
+Authorization: ******
+```
+
+**Request Body**
+```json
+{
+  "title": "String",
+  "description": "String",
+  "category": "String",
+  "price": 250
+}
+```
+
+**Success — 201**
+```json
+{
+  "gig": {
+    "_id": "String",
+    "title": "String",
+    "description": "String",
+    "category": "String",
+    "price": 250,
+    "freelancer": "userId",
+    "isActive": true
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Title, description, category and price are required" }` | Missing fields |
+| `400` | `{ "message": "Title must be text of 3 to 100 characters" }` | Invalid title |
+| `400` | `{ "message": "Description must be text of 10 to 2000 characters" }` | Invalid description |
+| `400` | `{ "message": "Invalid category" }` | Unsupported category |
+| `400` | `{ "message": "Price must be a whole number from 1 to 1000000" }` | Invalid price |
+| `401` | `{ "message": "No Token Provided" }` | Authentication token missing |
+| `403` | `{ "message": "Access Denied" }` | User is not a freelancer |
+
+---
+
+### PUT /api/gigs/:id
+
+Updates an existing gig owned by the authenticated freelancer.
+
+**Request Body**
+```json
+{
+  "title": "Updated title",
+  "description": "Updated description",
+  "category": "design",
+  "price": 450
+}
+```
+
+**Success — 200**
+```json
+{
+  "gig": {
+    "_id": "String",
+    "title": "String",
+    "description": "String",
+    "category": "String",
+    "price": 450
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid gig id" }` | Malformed ID |
+| `400` | `{ "message": "No editable fields provided" }` | Empty update body |
+| `400` | `{ "message": "Title must be text of 3 to 100 characters" }` | Invalid field data |
+| `403` | `{ "message": "You can only change your own gigs" }` | Gig belongs to another freelancer |
+| `404` | `{ "message": "Gig not found" }` | Gig is missing or inactive |
+
+---
+
+### DELETE /api/gigs/:id
+
+Soft deletes a gig owned by the authenticated freelancer.
+
+**Success — 200**
+```json
+{
+  "message": "Gig deleted"
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid gig id" }` | Malformed ID |
+| `403` | `{ "message": "You can only change your own gigs" }` | Another freelancer's gig |
+| `404` | `{ "message": "Gig not found" }` | Gig does not exist or is inactive |
+
+---
+
+## Bookings
+
+### POST /api/bookings
+
+Creates a booking for an active gig on behalf of the authenticated client.
+
+**Headers**
+```http
+Authorization: ******
+```
+
+**Request Body**
+```json
+{
+  "gigId": "String"
+}
+```
+
+**Success — 201**
+```json
+{
+  "booking": {
+    "_id": "String",
+    "client": "userId",
+    "freelancer": "userId",
+    "gig": "gigId",
+    "status": "confirmed",
+    "price": 250
+  },
+  "transaction": {
+    "_id": "String",
+    "reference": "String",
+    "status": "pending",
+    "amount": 250,
+    "currency": "ZAR"
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid gig id" }` | Malformed gig id |
+| `400` | `{ "message": "You cannot book your own gig" }` | Client tries to book own gig |
+| `404` | `{ "message": "Gig not found" }` | Gig does not exist or is inactive |
+| `401` | `{ "message": "No Token Provided" }` | Authentication token missing |
+| `403` | `{ "message": "Access Denied" }` | User is not a client |
+
+---
+
+### GET /api/bookings/my-bookings
+
+Lists bookings created by the authenticated client.
+
+**Success — 200**
+```json
+{
+  "bookings": [
+    {
+      "_id": "String",
+      "status": "confirmed",
+      "gig": { "title": "String", "category": "String" },
+      "freelancer": { "name": "String" }
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 1,
+  "pages": 1
+}
+```
+
+---
+
+### GET /api/bookings/freelancer
+
+Lists bookings for gigs owned by the authenticated freelancer.
+
+**Success — 200**
+```json
+{
+  "bookings": [
+    {
+      "_id": "String",
+      "status": "confirmed",
+      "gig": { "title": "String", "category": "String" },
+      "client": { "name": "String" }
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 1,
+  "pages": 1
+}
+```
+
+---
+
+### GET /api/bookings/:id
+
+Returns a single booking and its matching transaction.
+
+**Success — 200**
+```json
+{
+  "booking": {
+    "_id": "String",
+    "status": "confirmed",
+    "gig": { "title": "String", "category": "String" },
+    "client": { "name": "String" },
+    "freelancer": { "name": "String" }
+  },
+  "transaction": {
+    "_id": "String",
+    "reference": "String",
+    "status": "pending",
+    "amount": 250,
+    "currency": "ZAR"
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid booking id" }` | Malformed ID |
+| `404` | `{ "message": "Booking not found" }` | Booking is missing or not owned by this user |
+
+---
+
+### PATCH /api/bookings/:id/status
+
+Lets a freelancer advance a booking from `confirmed` to `in_progress` or from `in_progress` to `completed`.
+
+**Request Body**
+```json
+{
+  "status": "in_progress"
+}
+```
+
+**Success — 200**
+```json
+{
+  "booking": {
+    "_id": "String",
+    "status": "in_progress"
+  },
+  "transaction": {
+    "_id": "String",
+    "status": "pending"
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Status must be in_progress or completed" }` | Invalid status |
+| `400` | `{ "message": "Cannot change a booking from confirmed to completed" }` | Invalid flow |
+| `404` | `{ "message": "Booking not found" }` | Booking does not belong to this freelancer |
+| `409` | `{ "message": "Booking was updated by another request. Refresh and try again" }` | Concurrent update |
+
+---
+
+### PATCH /api/bookings/:id/cancel
+
+Allows a client to cancel a confirmed booking and refunds the payment.
+
+**Request Body**
+```json
+{
+  "reason": "Optional cancellation reason"
+}
+```
+
+**Success — 200**
+```json
+{
+  "booking": {
+    "_id": "String",
+    "status": "cancelled"
+  },
+  "transaction": {
+    "_id": "String",
+    "status": "refunded"
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Reason must be text" }` | Reason is not a string |
+| `400` | `{ "message": "Only confirmed bookings can be cancelled" }` | Booking not cancellable |
+| `404` | `{ "message": "Booking not found" }` | Booking not found for this client |
+
+---
+
+## Transactions
+
+### GET /api/transactions/my-transactions
+
+Returns all transactions for the authenticated client or freelancer.
+
+**Success — 200**
+```json
+{
+  "transactions": [
+    {
+      "_id": "String",
+      "status": "pending",
+      "amount": 250,
+      "client": { "name": "String" },
+      "freelancer": { "name": "String" },
+      "booking": {
+        "status": "confirmed",
+        "gig": { "title": "String" }
+      }
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 1,
+  "pages": 1
+}
+```
+
+---
+
+### GET /api/transactions/income
+
+Returns totals for a freelancer's income by status.
+
+**Success — 200**
+```json
+{
+  "earned": 2500,
+  "pending": 1200,
+  "refunded": 150
+}
+```
+
+---
+
+### GET /api/transactions
+
+Returns every transaction in the system. This route is restricted to admins.
+
+**Success — 200**
+```json
+{
+  "transactions": [
+    {
+      "_id": "String",
+      "status": "completed",
+      "amount": 500,
+      "reference": "String"
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 34,
+  "pages": 4
+}
+```
+
+---
+
+### GET /api/transactions/:id
+
+Returns a single transaction for the current user or admin.
+
+**Success — 200**
+```json
+{
+  "transaction": {
+    "_id": "String",
+    "status": "completed",
+    "amount": 500,
+    "reference": "String",
+    "booking": {
+      "status": "completed",
+      "gig": { "title": "String" }
+    }
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid transaction id" }` | Malformed ID |
+| `404` | `{ "message": "Transaction not found" }` | Transaction does not exist or is not for this user |
+
+---
+
+## Admin
+
+### GET /api/admin/users
+
+Returns all users in the system, newest first. Passwords are never included.
+
+**Success — 200**
+```json
+{
+  "users": [
+    {
+      "_id": "String",
+      "name": "String",
+      "email": "String",
+      "role": "client",
+      "isActive": true
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 25,
+  "pages": 3
+}
+```
+
+---
+
+### PATCH /api/admin/users/:id/status
+
+Enables or disables a user account. An admin cannot disable their own account.
+
+**Request Body**
+```json
+{
+  "isActive": false
+}
+```
+
+**Success — 200**
+```json
+{
+  "user": {
+    "_id": "String",
+    "name": "String",
+    "email": "String",
+    "role": "client",
+    "isActive": false
+  }
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid user id" }` | Malformed user id |
+| `400` | `{ "message": "isActive must be true or false" }` | Invalid boolean |
+| `403` | `{ "message": "You cannot disable your own account" }` | Admin tried to disable themselves |
+| `404` | `{ "message": "User not found" }` | User does not exist |
+
+---
+
+### DELETE /api/admin/gigs/:id
+
+Soft deletes any active gig as an admin action.
+
+**Success — 200**
+```json
+{
+  "message": "Gig deleted"
+}
+```
+
+**Errors**
+| Status | Response | Cause |
+|---|---|---|
+| `400` | `{ "message": "Invalid gig id" }` | Malformed gig id |
+| `404` | `{ "message": "Gig not found" }` | Gig does not exist or is already inactive |
 
 ---
 

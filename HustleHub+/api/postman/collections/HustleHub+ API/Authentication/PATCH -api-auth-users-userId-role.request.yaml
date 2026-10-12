@@ -1,0 +1,25 @@
+$kind: http-request
+name: PATCH /api/auth/users/:userId/role
+url: "{{base_url}}/api/auth/users/{{freelancer_user_id}}/role"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "role": "freelancer"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('admin can assign a supported role', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().user.role).to.eql('freelancer');
+      });
+    language: text/javascript
+order: 9000
