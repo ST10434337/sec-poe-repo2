@@ -1,4 +1,6 @@
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { useRef, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { createBooking } from '../api/bookings.js'
 import { getGig } from '../api/gigs.js'
 import { useAuth } from '../auth/AuthContext.js'
 import { useApi } from '../hooks/useApi.js'
@@ -6,9 +8,54 @@ import Alert from '../components/Alert.jsx'
 import { ROLES, categoryLabel } from '../utils/constants.js'
 import { formatRand } from '../utils/format.js'
 
+// The Book button for clients; booking also creates the simulated payment
+function BookBox({ gig }) {
+  const navigate = useNavigate()
+  const [booking, setBooking] = useState(false)
+  const [bookError, setBookError] = useState('')
+  // Blocks a second click straight away, before the disabled button has re-drawn, so a gig is booked once
+  const busy = useRef(false)
+  const price = formatRand(gig.price)
+
+  async function handleBook() {
+    if (busy.current) return
+    const sure = window.confirm(
+      `Book "${gig.title}" for ${price}?\n\nA simulated payment of ${price} is held until the freelancer completes the work.`,
+    )
+    if (!sure) return
+
+    busy.current = true
+    setBooking(true)
+    setBookError('')
+    try {
+      // Only the gig id is sent; the API sets the client, freelancer and price
+      const { booking: created, transaction } = await createBooking(gig._id)
+      navigate(`/bookings/${created._id}`, {
+        state: {
+          message: `Booked! Your payment reference is ${transaction.reference}. The payment stays pending until the work is completed.`,
+          type: 'success',
+        },
+      })
+    } catch (err) {
+      setBookError(err.message)
+      setBooking(false)
+      busy.current = false
+    }
+  }
+
+  return (
+    <>
+      <Alert type="error">{bookError}</Alert>
+      <button type="button" className="btn" onClick={handleBook} disabled={booking}>
+        {booking ? 'Booking…' : `Book this gig for ${price}`}
+      </button>
+    </>
+  )
+}
+
 // The box under the gig: what this visitor can do with it
-// Step 9 adds the Book button for clients, and step 11 adds Remove gig for admins
-function GigActions({ user, location }) {
+// Later will ~> Remove gig for admins
+function GigActions({ gig, user, location }) {
   if (!user) {
     return (
       <>
@@ -22,7 +69,7 @@ function GigActions({ user, location }) {
     )
   }
 
-  if (user.role === ROLES.CLIENT) return <p className="muted">Booking is coming soon.</p>
+  if (user.role === ROLES.CLIENT) return <BookBox gig={gig} />
   if (user.role === ROLES.FREELANCER) return <p className="muted">Freelancer accounts can't book gigs.</p>
   return <p className="muted">Admin accounts can't book gigs.</p>
 }
@@ -74,7 +121,7 @@ function GigDetailPage() {
       </article>
 
       <section className="card" aria-label="Book this gig">
-        <GigActions user={user} location={location} />
+        <GigActions gig={gig} user={user} location={location} />
       </section>
     </>
   )
