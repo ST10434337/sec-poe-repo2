@@ -11,7 +11,8 @@
     "start": "cross-env NODE_ENV=Prod node ./index.js",
     "dev": "cross-env NODE_ENV=Dev nodemon index.js",
     "mkcert": "cross-env NODE_ENV=test node scripts/make-certs.js",
-    "create-admin": "cross-env NODE_ENV=test node scripts/createAdmin.js"
+    "create-admin-dev": "cross-env NODE_ENV=Dev node scripts/createAdmin.js",
+    "create-admin": "cross-env NODE_ENV=Prod node scripts/createAdmin.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

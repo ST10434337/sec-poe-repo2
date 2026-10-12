@@ -17,7 +17,7 @@ if (fs.existsSync(envFile)) {
 }
 
 const isTestMode = process.env.NODE_ENV === 'test';
-const isDevMode = process.env.NODE_ENV === 'dev';
+const isDevMode = process.env.NODE_ENV === 'Dev';
 
 
 const cors = require('cors');
@@ -38,33 +38,33 @@ const USE_HTTPS = process.env.USE_HTTPS === 'true';
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 
 // Disable the 'X-Powered-By' header for security reasons
-app.disable('x-powered-by');
+app.disable('x-powered-by'); // Prevents revealing the server technology used, enhancing security
 
 // Use Helmet to define HTTP headers for security ~> (The IIE, 2026)
 app.use(
     helmet({
         contentSecurityPolicy: {
             directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'"],
-                styleSrc: ["'self'"],
-                imgSrc: ["'self'", "'data:'"],
-                connectSrc: ["'self'", CLIENT_ORIGIN],
-                objectSrc: ["'none'"],
-                baseUri: ["'self'"],
-                frameAncestors: ["'none'"],
+                defaultSrc: ["'self'"],     // Restrict all content to the same origin by default
+                scriptSrc: ["'self'"],      // Allow scripts only from the same origin
+                styleSrc: ["'self'"],       // Allow styles only from the same origin
+                imgSrc: ["'self'", "'data:'"],  // Allow images from the same origin and data URIs
+                connectSrc: ["'self'", CLIENT_ORIGIN], // Allow connections to the same origin and the specified client origin
+                objectSrc: ["'none'"],      // Disallow all object sources (e.g., Flash, Java applets)
+                baseUri: ["'self'"],        // Allow the base URI to be the same origin
+                frameAncestors: ["'none'"], // Disallow embedding the site in frames or iframes
             }
         },
-        crossOriginResourcePolicy: { policy: "same-site" },
+        crossOriginResourcePolicy: { policy: "same-site" }, // Restrict cross-origin resource sharing to the same site
     })
 );
 
 // Enable CORS for the specified client origin ~> (The IIE, 2026)
 app.use(
     cors({
-        origin: CLIENT_ORIGIN,
+        origin: CLIENT_ORIGIN,  // Allow requests only from the specified client origin
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],  // PATCH is used by the booking status routes
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: ['Content-Type', 'Authorization'],   // Allow only specific headers in requests
     })
 );
 
