@@ -7,11 +7,11 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./index.js",
-    "dev": "nodemon index.js",
-    "mkcert": "node make-certs.js",
-    "create-admin": "node scripts/createAdmin.js" 
+    "test": "cross-env NODE_ENV=test node ./index.js",
+    "start": "cross-env NODE_ENV=Prod node ./index.js",
+    "dev": "cross-env NODE_ENV=Dev nodemon index.js",
+    "mkcert": "cross-env NODE_ENV=test node scripts/make-certs.js",
+    "create-admin": "cross-env NODE_ENV=test node scripts/createAdmin.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -26,6 +26,8 @@
     "redis": "^6.3.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
+    "newman": "^6.2.3",
     "nodemon": "^3.1.14"
   }
 }

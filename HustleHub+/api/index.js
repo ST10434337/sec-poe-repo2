@@ -1,10 +1,20 @@
-require('dotenv').config();
 const express = require('express');
+const path = require('path');
+
+const dotenv = require('dotenv');
+
+// Determine Which .env file to load based on the NODE_ENV variable
+if (process.env.NODE_ENV !== 'Prod') {
+    console.log(`Loading .env.${process.env.NODE_ENV} file for ${process.env.NODE_ENV} environment`);
+    var envFile = path.resolve(process.cwd(), `.env.${process.env.NODE_ENV.toLowerCase()}`);
+};
+
+require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+
 const cors = require('cors');
 const helmet = require('helmet');
 const https = require('https');
 const fs = require('fs');
-const path = require('path');
 const mongoose = require('mongoose');
 
 const rateLimit = require("./middleware/rateLimit");
@@ -100,11 +110,12 @@ app.get('/', (req, res) => {
 });
 
 // System Info Endpoint (only available in development mode) ~> (The IIE, 2026)
-if (process.env.NODE_ENV === 'Dev') {
+if (process.env.NODE_ENV === 'Dev' || process.env.NODE_ENV === 'test') {
     app.get('/system-info', (req, res) => {
         res.json({
             app: process.env.APP_NAME,
-            environment: process.env.ENVIRONMENT
+            env: process.env.ENVIRONMENT,
+            testing: process.env.NODE_ENV === 'test',
         });
     });
 }
