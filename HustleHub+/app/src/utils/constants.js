@@ -22,6 +22,9 @@ export const CATEGORIES = [
   { value: 'other', label: 'Other' },
 ]
 
+// "tech-digital" -> "Tech & digital"; an unknown value is shown as it is
+export const categoryLabel = (value) => CATEGORIES.find((c) => c.value === value)?.label ?? value
+
 export const BOOKING_STATUS_LABELS = {
   confirmed: 'Confirmed',
   in_progress: 'In progress',

@@ -353,3 +353,105 @@ main.container {
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+/* Text only screen readers hear, e.g. which gig a "View gig" link opens */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Search box, category and button on one row; stacked on narrow screens */
+.search-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: var(--space);
+  align-items: end;
+  margin-bottom: var(--space);
+}
+
+.search-form .field {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .search-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.results-summary {
+  font-weight: 600;
+}
+
+/* Cards in a grid that fits as many columns as the screen allows */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space);
+}
+
+.grid > .card {
+  margin-top: 0;
+}
+
+.gig-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gig-card > * {
+  margin: 0;
+}
+
+.gig-card .btn {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.gig-category {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.gig-title {
+  font-size: 1.125rem;
+  overflow-wrap: anywhere;
+}
+
+/* Show only the first 3 lines of the description on a card */
+.gig-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.gig-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.gig-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Keep the line breaks the user typed, without using HTML */
+.pre-line {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
