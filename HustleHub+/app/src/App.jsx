@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import ProtectedRoute from './auth/ProtectedRoute.jsx'
+import { ROLES } from './utils/constants.js'
 import Layout from './components/Layout.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
@@ -15,7 +17,7 @@ import AdminTransactionsPage from './pages/AdminTransactionsPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 
 // Every page in the app. They all share the Layout (nav bar + page container) ~> (React Router, n.d.)
-// Step 4 wraps the logged-in and role-only groups in ProtectedRoute
+// ProtectedRoute guards each group: login is needed, and only the listed roles get in
 function App() {
   return (
     <Routes>
@@ -29,21 +31,29 @@ function App() {
         <Route path="gigs/:id" element={<GigDetailPage />} />
 
         {/* Any logged-in user */}
-        <Route path="account" element={<AccountPage />} />
-        <Route path="bookings/:id" element={<BookingDetailPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="account" element={<AccountPage />} />
+          <Route path="bookings/:id" element={<BookingDetailPage />} />
+        </Route>
 
         {/* Client and freelancer */}
-        <Route path="bookings" element={<BookingsPage />} />
-        <Route path="transactions" element={<TransactionsPage />} />
+        <Route element={<ProtectedRoute roles={[ROLES.CLIENT, ROLES.FREELANCER]} />}>
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+        </Route>
 
         {/* Freelancer */}
-        <Route path="my-gigs" element={<MyGigsPage />} />
-        <Route path="my-gigs/new" element={<GigFormPage />} />
-        <Route path="my-gigs/:id/edit" element={<GigFormPage />} />
+        <Route element={<ProtectedRoute roles={[ROLES.FREELANCER]} />}>
+          <Route path="my-gigs" element={<MyGigsPage />} />
+          <Route path="my-gigs/new" element={<GigFormPage />} />
+          <Route path="my-gigs/:id/edit" element={<GigFormPage />} />
+        </Route>
 
         {/* Admin */}
-        <Route path="admin/users" element={<AdminUsersPage />} />
-        <Route path="admin/transactions" element={<AdminTransactionsPage />} />
+        <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
+          <Route path="admin/users" element={<AdminUsersPage />} />
+          <Route path="admin/transactions" element={<AdminTransactionsPage />} />
+        </Route>
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

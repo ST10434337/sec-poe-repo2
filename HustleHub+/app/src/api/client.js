@@ -1,0 +1,79 @@
+import { getToken } from '../auth/storage.js'
+
+// Every API request goes through apiRequest, so errors are handled the same way on every page
+// The API answers errors as { message }, and those messages are safe to show ~> (The IIE, 2026)
+
+// Set in .env (copy .env.example). Any trailing slash is removed
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
+
+const NETWORK_ERROR = 'Cannot reach the server. Check the API is running, and that you accepted its HTTPS certificate.'
+const SERVER_ERROR = 'Something went wrong. Please try again.'
+const TOO_MANY = 'Too many requests. Please wait a few minutes and try again.'
+const SESSION_ENDED = 'Your session has ended. Please log in again.'
+
+// AuthProvider sets this, so a rejected token logs the user out
+let onAuthError = () => {}
+export const setAuthErrorHandler = (handler) => {
+  onAuthError = handler
+}
+
+// An error with a message that is safe to show, plus the HTTP status (0 = no reply)
+export class ApiError extends Error {
+  constructor(status, message) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export async function apiRequest(path, { method = 'GET', body } = {}) {
+  if (!BASE_URL)
+    throw new ApiError(0, 'VITE_API_URL is not set. Copy .env.example to .env and restart the dev server.')
+
+  const token = getToken()
+  const headers = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  let res
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch {
+    // fetch only throws when there is no reply at all (server down, certificate not accepted, CORS)
+    throw new ApiError(0, NETWORK_ERROR)
+  }
+
+  // Some error replies (for example a proxy error page) are not JSON
+  const data = await res.json().catch(() => null)
+  if (res.ok) return data
+
+  let message = typeof data?.message === 'string' ? data.message : SERVER_ERROR
+  if (res.status === 429) message = TOO_MANY
+  if (res.status >= 500) message = SERVER_ERROR
+
+  // A token was sent but the API rejected it, or the account was disabled: end the session
+  // Login itself also returns 401, but no token is sent then, so a wrong password does not log anyone out
+  if (token && (res.status === 401 || message === 'Account is disabled')) {
+    if (res.status === 401) message = SESSION_ENDED
+    onAuthError()
+  }
+
+  throw new ApiError(res.status, message)
+}
+
+// Builds "?page=2&q=logo" from an object, skipping empty values ~> (MDN Web Docs, n.d.)
+export const withQuery = (params = {}) => {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') search.set(key, value)
+  }
+  const text = search.toString()
+  return text ? `?${text}` : ''
+}
+
+// The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): Module manual. LU4, p.108-110. The Independent Institute of Education (Pty) Ltd.
+// MDN Web Docs (n.d.) URLSearchParams. Available at: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams (Accessed: 12 October 2026).
