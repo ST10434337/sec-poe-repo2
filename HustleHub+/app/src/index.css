@@ -533,3 +533,52 @@ main.container {
   align-items: center;
   gap: var(--space);
 }
+
+/* Income summary boxes (IncomeSummary component) */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space);
+  margin-bottom: calc(var(--space) * 1.5);
+}
+
+.stats > .card {
+  margin-top: 0;
+}
+
+.stat {
+  border-top-width: 4px;
+}
+
+.stat > * {
+  margin: 0;
+}
+
+.stat-success {
+  border-top-color: var(--success);
+}
+
+.stat-warning {
+  border-top-color: #d97706;
+}
+
+.stat-muted {
+  border-top-color: var(--muted);
+}
+
+.stat-label {
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+/* Long payment references can break onto two lines */
+.reference {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  min-width: 12rem;
+}
