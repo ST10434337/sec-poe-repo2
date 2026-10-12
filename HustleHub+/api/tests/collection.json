@@ -1103,38 +1103,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "DELETE /api/test/cleanup",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
-            },
-            "method": "DELETE",
-            "url": "{{base_url}}/api/test/cleanup"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('cleans test data and preserves admin users', function () {",
-                  "  pm.response.to.have.status(200);",
-                  "  pm.expect(pm.response.json().message).to.eql('Test data cleaned up');",
-                  "  pm.expect(pm.response.json().preservedAdmins).to.be.at.least(1);",
-                  "  pm.expect(pm.response.json().deleted).to.include.all.keys('transactions', 'bookings', 'gigs', 'users');",
-                  "});",
-                  "if (pm.response.code === 200) {",
-                  "  ['auth_token', 'client_token', 'freelancer_token', 'client_user_id', 'freelancer_user_id', 'gig_id', 'moderation_gig_id', 'booking_id', 'cancel_booking_id', 'transaction_id'].forEach(function (key) {",
-                  "    pm.environment.unset(key);",
-                  "  });",
-                  "}"
-                ]
-              }
-            }
-          ]
         }
       ]
     }

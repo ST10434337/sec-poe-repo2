@@ -1,80 +1,95 @@
 const path = require('path');
 const dotenv = require('dotenv');
-const newman = require('newman');
-const createAdmin = require('../scripts/createAdmin'); // Import the createAdmin function
 
-// Force the script to read .env.test right at the beginning
 dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 console.log('🔄 Loaded variables from .env.test');
 
-// Import your Express app instance (Do not call app.listen() inside your server.js file directly, or export it so we can boot it here)
-// Note: Ensure your server/app file uses process.env.MONGO_URI (or similar) from your loaded dotenv config!
-const app = require('../index.js'); 
-
+const newman = require('newman');
+const mongoose = require('mongoose');
+const createAdmin = require('../scripts/createAdmin');
 const PORT = process.env.PORT || 4000;
 
-//  Start your Express server programmatically
-const server = app.listen(PORT, () => {
-    console.log(`🚀 API Server safely booted in TEST mode on http://localhost:${PORT}`);
-    console.log('🔧 Creating admin user for tests...');
-    
-    createAdmin()
-        .then(() => {
-            console.log('✅ Admin user created successfully.');
-        })
-        .catch((err) => {
-            console.error('❌ Failed to create admin user:', err.message);
-            process.exit(1);
+async function runNewmanTests() {
+    let server;
+    let exitCode = 0;
+
+    try {
+        console.log('🔧 Creating admin user for tests...');
+        await createAdmin({ allowExisting: true });
+        console.log('✅ Admin user ready.');
+
+        // Wait for admin setup before importing the app or starting Newman.
+        const app = require('../index.js');
+        server = app.listen(PORT);
+        await new Promise((resolve, reject) => {
+            server.once('listening', resolve);
+            server.once('error', reject);
         });
 
-    console.log('🤖 Starting Newman automation tests...');
+        console.log(`🚀 API Server booted in TEST mode on http://localhost:${PORT}`);
+        console.log('🤖 Starting Newman automation tests...');
 
-    //  Run Newman programmatically now that the server is live
-    newman.run({
-        collection: require('./collection.json'), // Path to your Postman collection file
-        environment: require('./environment.json'), // Path to your Postman environment file
-        insecure: true,
-        reporters: 'cli'
-    }, function (err, summary) {
-        // Clean up after tests finish
-        console.log('🛑 Newman execution complete. Shutting down test server...');
-        
-        server.close(() => {
-            console.log('👋 Test server closed cleanly.');
-            
-            if (err || summary.run.failures.length) {
-                console.error('❌ Tests failed!');
-                dropMongoCollections()
-                .then(() => {
-                    console.log('🗑️ Test database cleaned up.');
-                })
-                .catch((cleanupErr) => {
-                    console.error('⚠️ Failed to clean up test database:', cleanupErr.message);
-                })
-                .finally(() => {
-                    process.exit(1); // Exits with an error code for your terminal or CI/CD
+        const summary = await new Promise((resolve, reject) => {
+            newman.run({
+                collection: require('./collection.json'),
+                environment: require('./environment.json'),
+                insecure: true,
+                reporters: 'cli'
+            }, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        if (summary.run.failures.length) {
+            console.error('❌ Tests failed!');
+            exitCode = 1;
+        } else {
+            console.log('✅ All tests passed successfully!');
+        }
+    } catch (err) {
+        console.error(`❌ Newman test setup or execution failed: ${err.message}`);
+        exitCode = 1;
+    } finally {
+        if (server) {
+            try {
+                await new Promise((resolve, reject) => {
+                    server.close((err) => err ? reject(err) : resolve());
                 });
-            } else {
-                console.log('✅ All tests passed successfully!');
-                dropMongoCollections()
-                .then(() => {
-                    console.log('🗑️ Test database cleaned up.');
-                })
-                .catch((cleanupErr) => {
-                    console.error('⚠️ Failed to clean up test database:', cleanupErr.message);
-                })
-                .finally(() => {
-                    process.exit(0); // Exits cleanly
-                });
+                console.log('👋 Test server closed.');
+            } catch (err) {
+                console.error(`⚠️ Failed to close test server: ${err.message}`);
+                exitCode = 1;
             }
-        });
-    });
-});
+        }
 
-dropMongoCollections = async () => {
-    const mongoose = require('mongoose');
-    const { MONGO_URI } = process.env.MONGO_URI;
-    await mongoose.connect(MONGO_URI);
+        try {
+            await dropMongoCollections();
+            console.log('🗑️ Test database cleaned up.');
+        } catch (err) {
+            console.error(`⚠️ Failed to clean up test database: ${err.message}`);
+            exitCode = 1;
+        }
+    }
+
+    process.exitCode = exitCode;
+}
+
+async function dropMongoCollections() {
+    if (process.env.NODE_ENV !== 'test') {
+        throw new Error('Refusing to drop the database unless NODE_ENV is test');
+    }
+    if (!process.env.MONGO_URI) {
+        throw new Error('MONGO_URI is not configured');
+    }
+    if (mongoose.connection.readyState === 0) {
+        await mongoose.connect(process.env.MONGO_URI);
+    }
     await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-};
+    await mongoose.disconnect();
+}
+
+runNewmanTests();
