@@ -3,6 +3,21 @@
 **Student numbers:** ST10443441, ST10294763, ST10434337  
 **Stack:** React, React Router, Vite, Node.js, Express, MongoDB, Mongoose and Redis  
 
+Youtube video link: 
+
+---
+## Documentation contained in this repo
+
+| Document | What it covers | Read it when |
+|---|---|---|
+| [SETUP.md](SETUP.md) | Step-by-step local setup: `.env` files, Redis, API, certificate, app, tests | You want to run the project |
+| [docker-run.md](HustleHub+/docker-run.md) | Running the API, app and Redis with Docker Compose | You want to use Docker instead |
+| [api/Readme.md](HustleHub+/api/Readme.md) | API commands, first admin, full endpoint reference with examples | You need the details of an endpoint |
+| [postman/README.md](HustleHub+/api/postman/README.md) | Running the Postman API tests on a test database | You want to run the API tests |
+| [documentation.md](HustleHub+/documentation.md) | Backend helpers: rate limiter, auth, password and error handling | You want to understand the backend code |
+| [Part1_README.md](Part1_README.md) | Part 1 submission: secure backend design and video | You want the Part 1 background |
+
+----
 
 ## 1. Project overview
 
