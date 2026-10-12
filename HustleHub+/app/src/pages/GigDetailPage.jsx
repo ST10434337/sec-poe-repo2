@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { removeGig } from '../api/admin.js'
 import { createBooking } from '../api/bookings.js'
 import { getGig } from '../api/gigs.js'
 import { useAuth } from '../auth/AuthContext.js'
@@ -53,8 +54,41 @@ function BookBox({ gig }) {
   )
 }
 
+// Moderation for admins: hides any gig from clients; bookings already made on it are kept
+function RemoveGigBox({ gig }) {
+  const navigate = useNavigate()
+  const [removing, setRemoving] = useState(false)
+  const [removeError, setRemoveError] = useState('')
+
+  async function handleRemove() {
+    const sure = window.confirm(
+      `Remove "${gig.title}"?\n\nClients will no longer see or book it. Bookings already made on it are kept.`,
+    )
+    if (!sure) return
+
+    setRemoving(true)
+    setRemoveError('')
+    try {
+      await removeGig(gig._id)
+      navigate('/gigs', { state: { message: 'Gig removed.', type: 'success' } })
+    } catch (err) {
+      setRemoveError(err.message)
+      setRemoving(false)
+    }
+  }
+
+  return (
+    <>
+      <p className="muted">Admin accounts can't book gigs. You can remove a gig that breaks the rules.</p>
+      <Alert type="error">{removeError}</Alert>
+      <button type="button" className="btn btn-danger" onClick={handleRemove} disabled={removing}>
+        {removing ? 'Removing…' : 'Remove gig'}
+      </button>
+    </>
+  )
+}
+
 // The box under the gig: what this visitor can do with it
-// Later will ~> Remove gig for admins
 function GigActions({ gig, user, location }) {
   if (!user) {
     return (
@@ -70,8 +104,8 @@ function GigActions({ gig, user, location }) {
   }
 
   if (user.role === ROLES.CLIENT) return <BookBox gig={gig} />
-  if (user.role === ROLES.FREELANCER) return <p className="muted">Freelancer accounts can't book gigs.</p>
-  return <p className="muted">Admin accounts can't book gigs.</p>
+  if (user.role === ROLES.ADMIN) return <RemoveGigBox gig={gig} />
+  return <p className="muted">Freelancer accounts can't book gigs.</p>
 }
 
 // Public page for one active gig; anyone can view it, only clients can book it

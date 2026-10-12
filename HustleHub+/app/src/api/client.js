@@ -58,8 +58,9 @@ export async function apiRequest(path, { method = 'GET', body } = {}) {
   // A token was sent but the API rejected it, or the account was disabled: end the session
   // Login itself also returns 401, but no token is sent then, so a wrong password does not log anyone out
   if (token && (res.status === 401 || message === 'Account is disabled')) {
-    if (res.status === 401) message = SESSION_ENDED
-    onAuthError()
+    message = res.status === 401 ? SESSION_ENDED : 'This account is disabled. Contact an admin if you think this is a mistake.'
+    // The reason is shown on the login page, so the user knows why they were logged out
+    onAuthError(message)
   }
 
   throw new ApiError(res.status, message)
