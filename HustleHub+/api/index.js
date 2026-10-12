@@ -1,20 +1,28 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 
 const dotenv = require('dotenv');
 
-// Determine Which .env file to load based on the NODE_ENV variable
-if (process.env.NODE_ENV !== 'Prod') {
-    console.log(`Loading .env.${process.env.NODE_ENV} file for ${process.env.NODE_ENV} environment`);
-    var envFile = path.resolve(process.cwd(), `.env.${process.env.NODE_ENV.toLowerCase()}`);
-};
+const normalizedNodeEnv = (process.env.NODE_ENV || 'Prod').trim().toLowerCase();
+process.env.NODE_ENV = normalizedNodeEnv;
+const envFile = path.resolve(process.cwd(), `.env.${normalizedNodeEnv}`);
+const baseEnvFile = path.resolve(process.cwd(), '.env');
 
-require('dotenv').config({ path: path.resolve(process.cwd(), '.env') });
+if (fs.existsSync(baseEnvFile)) {
+    dotenv.config({ path: baseEnvFile });
+}
+if (fs.existsSync(envFile)) {
+    dotenv.config({ path: envFile, override: true });
+}
+
+const isTestMode = process.env.NODE_ENV === 'test';
+const isDevMode = process.env.NODE_ENV === 'dev';
+
 
 const cors = require('cors');
 const helmet = require('helmet');
 const https = require('https');
-const fs = require('fs');
 const mongoose = require('mongoose');
 
 const rateLimit = require("./middleware/rateLimit");
@@ -84,7 +92,7 @@ const adminRoutes = require('./routes/admin');
 // app.use('/api', rateLimit.rateLimiter(), route);
 
 // Auth handling middleware
-app.use('/api/auth', rateLimit.rateLimiter(25, 15, 'login') ,authRoutes ); // Apply rate limiting to auth routes
+app.use('/api/auth', rateLimit.rateLimiter(25, 15, 'login'), authRoutes); // Apply rate limiting to auth routes
 
 // Gig routes (login and role checks are applied inside the router)
 // Rate limits applied in routes file
@@ -109,13 +117,13 @@ app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the HustleHub+ API' });
 });
 
-// System Info Endpoint (only available in development mode) ~> (The IIE, 2026)
-if (process.env.NODE_ENV === 'Dev' || process.env.NODE_ENV === 'test') {
+// System Info Endpoint (available in dev/test as the collection expects) ~> (The IIE, 2026)
+if (isDevMode || isTestMode) {
     app.get('/system-info', (req, res) => {
         res.json({
-            app: process.env.APP_NAME,
-            env: process.env.ENVIRONMENT,
-            testing: process.env.NODE_ENV === 'test',
+            app: process.env.APP_NAME || 'HustleHub+',
+            environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
+            testing: isTestMode,
         });
     });
 }
@@ -163,26 +171,29 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Start the server based on the USE_HTTPS environment variable ~> (The IIE, 2026)
-if (USE_HTTPS) {
-    console.log("Starting HTTPS...");
-    const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
-    const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'localhost-cert.pem');
+if (require.main === module) {
+    if (USE_HTTPS) {
+        console.log("Starting HTTPS...");
+        const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
+        const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'localhost-cert.pem');
 
-    const httpsOptions = {
-        key: fs.readFileSync(keyPath),
-        cert: fs.readFileSync(certPath),
+        const httpsOptions = {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
+        };
+
+        https.createServer(httpsOptions, app).listen(PORT, () => {
+            console.log(`Application listening on port ${PORT} (HTTPS)`);
+        });
+    } else {
+        console.log("Starting HTTP...");
+        app.listen(PORT, () => {
+            console.log(`Application listening on port ${PORT}`);
+            console.log(`http://localhost:4000`)
+        });
     };
+}
 
-    https.createServer(httpsOptions, app).listen(PORT, () => {
-        console.log(`Application listening on port ${PORT} (HTTPS)`);
-    });
-} else {
-    console.log("Starting HTTP...");
-    app.listen(PORT, () => {
-        console.log(`Application listening on port ${PORT}`);
-        console.log(`http://localhost:4000`)
-    });
-};
-
-//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): 
+module.exports = app; // Export the app for testing purposes
+//The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w):
 //  Module manual. The Independent Institute of Education (Pty) Ltd. 

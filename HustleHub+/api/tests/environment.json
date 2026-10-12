@@ -4,7 +4,7 @@
 	"values": [
 		{
 			"key": "base_url",
-			"value": "https://localhost:4000",
+			"value": "http://localhost:4000",
 			"type": "default",
 			"enabled": true
 		},
@@ -70,13 +70,13 @@
 		},
 		{
 			"key": "admin_email",
-			"value": "admin.joe@hustlehub.com",
+			"value": "admin@hustlehub.com",
 			"type": "default",
 			"enabled": true
 		},
 		{
 			"key": "admin_password",
-			"value": "Pass123!",
+			"value": "Password1!",
 			"type": "default",
 			"enabled": true
 		},

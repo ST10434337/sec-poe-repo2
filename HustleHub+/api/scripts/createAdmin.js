@@ -2,7 +2,19 @@
 // Run this from the api folder with: npm run create-admin
 // Required .env values: ADMIN_EMAIL, ADMIN_PASSWORD and ADMIN_NAME
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const fs = require('fs');
+
+const normalizedNodeEnv = (process.env.NODE_ENV || 'Prod').trim().toLowerCase();
+process.env.NODE_ENV = normalizedNodeEnv;
+const envFile = path.join(__dirname, '..', `.env.${normalizedNodeEnv}`);
+const baseEnvFile = path.join(__dirname, '..', '.env');
+
+if (fs.existsSync(baseEnvFile)) {
+    require('dotenv').config({ path: baseEnvFile });
+}
+if (fs.existsSync(envFile)) {
+    require('dotenv').config({ path: envFile, override: true });
+}
 
 // Same DNS servers as index.js, so the mongodb+srv address resolves the same way
 const dns = require('dns');
@@ -52,6 +64,8 @@ createAdmin()
     })
     .finally(() => mongoose.disconnect());
 
+
+module.exports = createAdmin; // Export for testing or programmatic use
 
 // for package.json
 // npm. n.d. scripts. [online] Available at: https://docs.npmjs.com/cli/v11/using-npm/scripts (Accessed: 9 October 2026).    
