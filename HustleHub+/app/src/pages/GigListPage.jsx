@@ -81,7 +81,7 @@ function GigListPage() {
           </p>
 
           {data.gigs.length === 0 ? (
-            <p className="muted">
+            <p className="card">
               {filtered ? 'No gigs found. Try a different search.' : 'There are no gigs yet. Check back soon.'}
             </p>
           ) : (

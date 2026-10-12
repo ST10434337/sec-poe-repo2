@@ -4,6 +4,7 @@ import { register } from '../api/auth.js'
 import { useAuth } from '../auth/AuthContext.js'
 import Alert from '../components/Alert.jsx'
 import FormField from '../components/FormField.jsx'
+import ShowPassword from '../components/ShowPassword.jsx'
 import { HOME_BY_ROLE, ROLES } from '../utils/constants.js'
 import { PASSWORD_RULE, hasErrors, validateRegister } from '../utils/validation.js'
 
@@ -30,6 +31,9 @@ function RegisterPage() {
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  // One tick box shows both password boxes, so the user can check they match
+  const [showPasswords, setShowPasswords] = useState(false)
+  const passwordType = showPasswords ? 'text' : 'password'
 
   // Already logged in: nothing to do here
   if (user) return <Navigate to={HOME_BY_ROLE[user.role] ?? '/gigs'} replace />
@@ -43,6 +47,8 @@ function RegisterPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    // Hide the passwords again before sending, so the browser never saves them as normal text
+    setShowPasswords(false)
     const found = validateRegister(values)
     setErrors(found)
     if (hasErrors(found)) {
@@ -75,15 +81,18 @@ function RegisterPage() {
     <>
       <h1>Create an account</h1>
       <form className="card form-narrow" onSubmit={handleSubmit} noValidate>
-        <Alert type="error">
-          {serverError}
-          {serverError === EMAIL_TAKEN && (
-            <>
-              {' '}
-              <Link to="/login">Log in instead</Link>
-            </>
-          )}
-        </Alert>
+        {/* Only shown when there is an error; two children would always count as "something" to Alert */}
+        {serverError && (
+          <Alert type="error">
+            {serverError}
+            {serverError === EMAIL_TAKEN && (
+              <>
+                {' '}
+                <Link to="/login">Log in instead</Link>
+              </>
+            )}
+          </Alert>
+        )}
 
         <FormField
           id="name"
@@ -107,7 +116,7 @@ function RegisterPage() {
         <FormField
           id="password"
           label="Password"
-          type="password"
+          type={passwordType}
           autoComplete="new-password"
           hint={PASSWORD_RULE}
           value={values.password}
@@ -117,11 +126,17 @@ function RegisterPage() {
         <FormField
           id="confirmPassword"
           label="Confirm password"
-          type="password"
+          type={passwordType}
           autoComplete="new-password"
           value={values.confirmPassword}
           onChange={handleChange}
           error={errors.confirmPassword}
+        />
+        <ShowPassword
+          id="show-passwords"
+          label="Show passwords"
+          checked={showPasswords}
+          onChange={setShowPasswords}
         />
 
         <fieldset className="fieldset">

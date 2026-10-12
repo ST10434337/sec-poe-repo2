@@ -4,6 +4,7 @@ import { login as loginRequest } from '../api/auth.js'
 import { useAuth } from '../auth/AuthContext.js'
 import Alert from '../components/Alert.jsx'
 import FormField from '../components/FormField.jsx'
+import ShowPassword from '../components/ShowPassword.jsx'
 import { HOME_BY_ROLE } from '../utils/constants.js'
 import { hasErrors, validateLogin } from '../utils/validation.js'
 
@@ -17,6 +18,7 @@ function LoginPage() {
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Already logged in: nothing to do here
   if (user) return <Navigate to={HOME_BY_ROLE[user.role] ?? '/gigs'} replace />
@@ -30,6 +32,8 @@ function LoginPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    // Hide the password again before sending, so the browser never saves it as normal text
+    setShowPassword(false)
     const found = validateLogin(values)
     setErrors(found)
     if (hasErrors(found)) {
@@ -71,12 +75,13 @@ function LoginPage() {
         <FormField
           id="password"
           label="Password"
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           autoComplete="current-password"
           value={values.password}
           onChange={handleChange}
           error={errors.password}
         />
+        <ShowPassword id="show-password" checked={showPassword} onChange={setShowPassword} />
         <button type="submit" className="btn" disabled={submitting}>
           {submitting ? 'Logging in…' : 'Log in'}
         </button>

@@ -80,10 +80,12 @@ function BookingDetailPage() {
   }
 
   function handleNextStep() {
-    if (nextStep.status === 'completed') {
-      const sure = window.confirm(`Mark this booking as completed?\n\nThis releases the payment of ${price} to you.`)
-      if (!sure) return
-    }
+    // Both steps change the booking for the client too, so both ask first
+    const question =
+      nextStep.status === 'completed'
+        ? `Mark this booking as completed?\n\nThis releases the payment of ${price} to you.`
+        : 'Start work on this booking?\n\nThe client can no longer cancel it after this.'
+    if (!window.confirm(question)) return
     runAction(() => updateBookingStatus(booking._id, nextStep.status), nextStep.done)
   }
 

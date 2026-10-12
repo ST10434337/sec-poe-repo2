@@ -582,3 +582,17 @@ main.container {
   overflow-wrap: anywhere;
   min-width: 12rem;
 }
+
+/* "Show password" tick box under the password box(es) */
+.show-password {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: -0.5rem 0 var(--space);
+  cursor: pointer;
+}
+
+/* Edge adds its own eye button to password boxes; hide it so there is only one way to show passwords */
+input::-ms-reveal {
+  display: none;
+}
