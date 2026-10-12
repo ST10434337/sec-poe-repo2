@@ -285,3 +285,71 @@ main.container {
   background: #f3f4f6;
   color: #374151;
 }
+
+/* "Hi, name" and the Log out button in the nav bar */
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Space between cards that sit one under another */
+.card + .card {
+  margin-top: var(--space);
+}
+
+/* Login and register forms do not need the full page width */
+.form-narrow {
+  max-width: 30rem;
+}
+
+/* A group of radio buttons, e.g. "I want to:" on the register page */
+.fieldset {
+  margin: 0 0 var(--space);
+  padding: 0;
+  border: 0;
+}
+
+.fieldset legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.choice input {
+  margin-top: 0.3rem;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+/* Label and value pairs, e.g. the account details */
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem var(--space);
+  margin: 0;
+}
+
+.details dt {
+  font-weight: 600;
+}
+
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

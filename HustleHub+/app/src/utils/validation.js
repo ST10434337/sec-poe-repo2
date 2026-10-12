@@ -34,8 +34,9 @@ export function validateRegister({ name = '', email = '', password = '', confirm
   else if (!EMAIL_RE.test(cleanEmail)) errors.email = 'Enter a valid email address.'
 
   // The password is not trimmed, because the API does not trim it either
+  // The full rule is already shown as the hint above the error, so the error stays short
   if (!password) errors.password = 'Enter a password.'
-  else if (!PASSWORD_RE.test(password)) errors.password = PASSWORD_RULE
+  else if (!PASSWORD_RE.test(password)) errors.password = 'Password does not meet the rules above.'
 
   if (confirmPassword !== password) errors.confirmPassword = 'Passwords do not match.'
 

@@ -7,6 +7,12 @@ export const ROLES = Object.freeze({
   ADMIN: 'admin',
 })
 
+export const ROLE_LABELS = {
+  [ROLES.CLIENT]: 'Client',
+  [ROLES.FREELANCER]: 'Freelancer',
+  [ROLES.ADMIN]: 'Admin',
+}
+
 // value is what the API stores, label is what the user sees
 export const CATEGORIES = [
   { value: 'tech-digital', label: 'Tech & digital' },
