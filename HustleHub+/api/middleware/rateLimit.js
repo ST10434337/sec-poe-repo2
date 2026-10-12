@@ -29,14 +29,14 @@ const rateLimiter = (limit = 100, windowTime = 15, name = 'api') => { // Default
 
 // Get the current request count for a specific IP address
 const getRequestCount = async (ip) => {
-    const key = `rate-limit:${ip}`;
+    const key = `rate-limit:login:${ip}`;
     const count = await redis.get(key);
     return count ? parseInt(count, 10) : 0;
 };
 
 // Get the remaining time until the rate limit resets for a specific IP address
 const getResetTime = async (ip) => {
-    const key = `rate-limit:${ip}`;
+    const key = `rate-limit:login:${ip}`;
     const ttl = await redis.ttl(key);
     return ttl; // Time in seconds until the rate limit resets
 };
