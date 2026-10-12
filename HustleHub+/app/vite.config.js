@@ -36,6 +36,11 @@ export default defineConfig(({ mode }) => {
         'Referrer-Policy': 'no-referrer',  // ~> (OWASP, n.d.b)
       },
     },
+    // npm test: Vitest runs the tests in a fake browser (jsdom), so React components can be rendered
+    test: {
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.js',
+    },
   }
 })
 
