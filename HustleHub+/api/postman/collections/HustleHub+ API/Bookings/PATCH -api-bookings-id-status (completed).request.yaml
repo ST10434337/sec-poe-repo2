@@ -1,0 +1,25 @@
+$kind: http-request
+name: PATCH /api/bookings/:id/status (completed)
+url: "{{base_url}}/api/bookings/{{booking_id}}/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "completed"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('completes in_progress booking and releases payment', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().booking.status).to.eql('completed');
+      });
+    language: text/javascript
+order: 7000

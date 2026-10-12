@@ -91,6 +91,7 @@ app.use('/api/transactions', transactionRoutes);
 // Admin routes (every route is admin only)
 app.use('/api/admin', rateLimit.rateLimiter(25, 15, 'admin'), adminRoutes);
 
+
 // Base Defined Routes
 
 // Root Endpoint

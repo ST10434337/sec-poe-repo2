@@ -1,0 +1,22 @@
+$kind: http-request
+name: GET /api/transactions/income
+url: "{{base_url}}/api/transactions/income"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('returns freelancer income totals in ZAR', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.currency).to.eql('ZAR');
+        pm.expect(body.earned).to.be.a('number');
+        pm.expect(body.pending).to.be.a('number');
+        pm.expect(body.refunded).to.be.a('number');
+        pm.expect(body.completedCount).to.be.a('number');
+      });
+    language: text/javascript
+order: 3000

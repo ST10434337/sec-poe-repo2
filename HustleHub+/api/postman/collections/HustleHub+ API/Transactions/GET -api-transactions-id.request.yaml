@@ -1,0 +1,19 @@
+$kind: http-request
+name: GET /api/transactions/:id
+url: "{{base_url}}/api/transactions/{{transaction_id}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('returns the transaction for its client', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.transaction._id).to.eql(pm.environment.get('transaction_id'));
+        pm.expect(body.transaction).to.have.property('status');
+      });
+    language: text/javascript
+order: 5000

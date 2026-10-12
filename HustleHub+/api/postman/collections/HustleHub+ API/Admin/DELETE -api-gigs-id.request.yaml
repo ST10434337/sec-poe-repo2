@@ -1,0 +1,17 @@
+$kind: http-request
+name: DELETE /api/gigs/:id
+url: "{{base_url}}/api/gigs/{{gig_id}}"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('soft-deletes an owned gig', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().message).to.eql('Gig deleted');
+      });
+    language: text/javascript
+order: 4000

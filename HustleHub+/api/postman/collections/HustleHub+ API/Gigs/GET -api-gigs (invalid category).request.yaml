@@ -1,0 +1,17 @@
+$kind: http-request
+name: GET /api/gigs (invalid category)
+url: "{{base_url}}/api/gigs?category=not-a-category"
+method: GET
+queryParams:
+  category: not-a-category
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('rejects an unsupported category filter', function () {
+        pm.response.to.have.status(400);
+        pm.expect(pm.response.json().message).to.eql('Invalid category');
+      });
+    language: text/javascript
+order: 2000

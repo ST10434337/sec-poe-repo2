@@ -1,0 +1,27 @@
+$kind: http-request
+name: POST /api/bookings (cancellation fixture)
+url: "{{base_url}}/api/bookings"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "gigId": "{{moderation_gig_id}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('creates a confirmed booking for cancellation test', function () {
+        pm.response.to.have.status(201);
+        const body = pm.response.json();
+        pm.expect(body.booking.status).to.eql('confirmed');
+        pm.environment.set('cancel_booking_id', body.booking._id);
+      });
+    language: text/javascript
+order: 2000

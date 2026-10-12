@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /api/auth/me
+url: "{{base_url}}/api/auth/me"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('returns the authenticated user without a password', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body).to.include.all.keys('name', 'email', 'role');
+        pm.expect(body).not.to.have.property('password');
+      });
+    language: text/javascript
+order: 7000

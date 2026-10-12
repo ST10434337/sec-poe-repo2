@@ -1,0 +1,27 @@
+$kind: http-request
+name: PATCH /api/admin/users/:id/status
+url: "{{base_url}}/api/admin/users/{{client_user_id}}/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "isActive": true
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('admin can set a users active status', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.user.isActive).to.eql(true);
+        pm.expect(body.user).not.to.have.property('password');
+      });
+    language: text/javascript
+order: 2000

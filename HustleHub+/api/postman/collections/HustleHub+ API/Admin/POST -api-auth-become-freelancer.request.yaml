@@ -1,0 +1,21 @@
+$kind: http-request
+name: POST /api/auth/become-freelancer
+url: "{{base_url}}/api/auth/become-freelancer"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('upgrades the client and refreshes its JWT', function () {
+        pm.response.to.have.status(200);
+        pm.expect(body.user.role).to.eql('freelancer');
+        pm.expect(body.token).to.be.a('string').and.not.empty;
+        pm.environment.set('freelancer_token', body.token);
+        pm.environment.set('auth_token', body.token);
+      });
+    language: text/javascript
+order: 5000

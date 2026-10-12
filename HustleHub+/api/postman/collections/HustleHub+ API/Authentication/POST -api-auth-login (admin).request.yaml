@@ -1,0 +1,27 @@
+$kind: http-request
+name: POST /api/auth/login (admin)
+url: "{{base_url}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{admin_email}}",
+      "password": "{{admin_password}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('logs in an admin and saves the JWT', function () {
+        pm.response.to.have.status(200);
+        pm.expect(body.token).to.be.a('string').and.not.empty;
+        pm.expect(body.user.role).to.eql('admin');
+        pm.environment.set('admin_token', body.token);
+      });
+    language: text/javascript
+order: 6000

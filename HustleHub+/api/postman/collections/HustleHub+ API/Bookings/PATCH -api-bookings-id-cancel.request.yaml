@@ -1,0 +1,27 @@
+$kind: http-request
+name: PATCH /api/bookings/:id/cancel
+url: "{{base_url}}/api/bookings/{{cancel_booking_id}}/cancel"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Postman cancellation test"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('cancels a confirmed booking and records the reason', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.booking.status).to.eql('cancelled');
+        pm.expect(body.booking.cancellationReason).to.eql('Postman cancellation test');
+      });
+    language: text/javascript
+order: 8000

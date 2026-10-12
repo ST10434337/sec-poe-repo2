@@ -1,0 +1,22 @@
+$kind: http-request
+name: GET /api/bookings/my-bookings
+url: "{{base_url}}/api/bookings/my-bookings?page=1&limit=10"
+method: GET
+queryParams:
+  page: "1"
+  limit: "10"
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('lists the authenticated client bookings', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.bookings).to.be.an('array');
+        pm.expect(body).to.include.all.keys('page', 'limit', 'total', 'totalPages');
+      });
+    language: text/javascript
+order: 3000
