@@ -169,7 +169,7 @@ Application starts
 
 **Postman screenshot of successful register**
 
-![Screenshot in postman](../Images/API_Postman_test_api_auth_register.png)
+![Screenshot in postman](../../Images/API_Postman_test_api_auth_register.png)
 
 **Request Body**
 ```json

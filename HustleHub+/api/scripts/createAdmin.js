@@ -9,12 +9,13 @@ process.env.NODE_ENV = normalizedNodeEnv;
 const envFile = path.join(__dirname, '..', `.env.${normalizedNodeEnv}`);
 const baseEnvFile = path.join(__dirname, '..', '.env');
 
-if (fs.existsSync(baseEnvFile)) {
-    require('dotenv').config({ path: baseEnvFile });
-}
 if (fs.existsSync(envFile)) {
     require('dotenv').config({ path: envFile, override: true });
 }
+if (fs.existsSync(baseEnvFile)) {
+    require('dotenv').config({ path: baseEnvFile });
+}
+
 
 // Same DNS servers as index.js, so the mongodb+srv address resolves the same way
 const dns = require('dns');
