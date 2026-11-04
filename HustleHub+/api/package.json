@@ -24,11 +24,25 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.4",
+    "cross-env": "^10.1.0",
     "redis": "^6.3.0"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0",
-    "newman": "^6.2.3",
+    
+    "newman": "^6.2.0",
     "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "handlebars": "^4.7.10",
+    "lodash": "^4.17.21",
+    "@faker-js/faker": "^10.5.0",
+    "flatted": "^3.4.2",
+    "csv-parse": "^7.0.2",
+    "minimatch": "^11.0.1",
+    "node-forge": "^1.4.0",
+    "jose": "^4.15.5",
+    "qs": "^6.16.1",
+    "underscore": "^1.13.8",
+    "uuid": "^11.1.1"
   }
 }
