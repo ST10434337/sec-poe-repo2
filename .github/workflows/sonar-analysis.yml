@@ -30,5 +30,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
+        with:
+          projectBaseDir: HustleHub+
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
