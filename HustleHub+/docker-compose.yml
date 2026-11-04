@@ -8,10 +8,7 @@ services:
     env_file:
       - ./api/.env
       - ./docker.env
-    environment:
-      NODE_ENV: production
-      PORT: 4000
-      USE_HTTPS: "false"
+    environment:      
       CLIENT_ORIGIN: http://localhost:3000
       REDIS_URL: redis://redis:6379
     ports:
@@ -19,6 +16,15 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      # Plain TCP check; swap for an HTTP /health call if you have such a route
+      test: ["CMD", "node", "-e", "require('net').connect(4000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    volumes:
+      - ./api/certs:/app/certs:ro
 
   client:
     build:
@@ -26,10 +32,13 @@ services:
       dockerfile: Dockerfile
     container_name: hustlehub-client
     restart: unless-stopped
+    env_file:
+      - ./app/.env
     ports:
       - "3000:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   redis:
     image: redis:latest
@@ -37,8 +46,12 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10   
+volumes:
+  redis_data:
