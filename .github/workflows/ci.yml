@@ -44,11 +44,11 @@ jobs:
     # Throwaway test values are fine here, because the database is
     # a temporary container that disappears when the job ends.
     env:
-      MONGO_URI: mongodb://localhost:27017/hustlehub_test
+      MONGO_URI: mongodb://localhost:27017/hustlehub_test?directConnection=true
       ADMIN_EMAIL: admin@hustlehub.com
       ADMIN_PASSWORD: Password1!
       ADMIN_NAME: Steven-the-Admin
-      JWT_SECRET: 1234
+      JWT_SECRET: ci-test-secret-at-least-32-characters-long
       REDIS_URL: redis://localhost:6379
       JWT_EXPIRES_IN : 1h
 
@@ -69,15 +69,15 @@ jobs:
           --health-retries 10
 
  # MongoDB container for the tests (same idea as Redis above).
-      mongo:
-        image: mongo:7
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+      # mongo:
+      #   image: mongo:7
+      #   ports:
+      #     - 27017:27017
+      #   options: >-
+      #     --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
+      #     --health-interval 5s
+      #     --health-timeout 5s
+      #     --health-retries 10
           
     defaults:
       run:
@@ -86,6 +86,19 @@ jobs:
     steps:
       # Step 1: Download your repository code onto the Linux machine
       - uses: actions/checkout@v4
+
+     # Start MongoDB as a single-node replica set.
+     # Booking creation uses database transactions, which MongoDB
+     # only supports on a replica set (not a standalone server).
+      - name: Start MongoDB replica set
+       run: |
+         docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+         # Wait for MongoDB to accept connections
+         until docker exec mongo mongosh --quiet --eval "db.runCommand({ping:1})"; do sleep 2; done
+         # Turn it into a one-member replica set
+         docker exec mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+         # Wait until it has elected itself primary
+         until docker exec mongo mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep -q true; do sleep 2; done
 
       # Step 2: Install Node.js (version 20) and cache downloaded packages
       # so later runs are faster
