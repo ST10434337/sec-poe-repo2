@@ -50,6 +50,7 @@ jobs:
       ADMIN_NAME: Steven-the-Admin
       JWT_SECRET: 1234
       REDIS_URL: redis://localhost:6379
+      JWT_EXPIRES_IN : 1h
 
     # SERVICES: extra Docker containers that run alongside this job.
     # The backend tests need Redis, so GitHub starts a Redis container
