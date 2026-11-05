@@ -76,6 +76,7 @@ async function runNewmanTests() {
     }
 
     process.exitCode = exitCode;                        // Set the process exit code based on test results and cleanup success
+    process.exit(exitCode);                              // Exit the process with the appropriate exit code to indicate success or failure
 }
 
 async function dropMongoCollections() {                 //  Function to drop all collections in the MongoDB database, used for cleaning up after tests

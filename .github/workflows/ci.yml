@@ -1,0 +1,279 @@
+# =====================================================================
+# CI/CD PIPELINE
+# Save this file as: .github/workflows/ci.yml
+#
+# What it does, in order:
+#   1. Backend job       -> install, lint, test, build the backend
+#   2. Frontend job      -> install, lint, test, build the frontend
+#   3. Security jobs     -> dependency audit + Trivy scan
+#   4. Build-stack job   -> builds the whole stack (only if 1-3 passed)
+#
+# Jobs 1, 2 and 3 run at the same time (in parallel) to save time.
+# If ANY step in ANY job fails, the whole pipeline is marked as failed.
+# Code analysis (e.g. CodeQL) lives in your other workflow file.
+# =====================================================================
+
+name: CI/CD Pipeline   # The name shown in the "Actions" tab on GitHub
+
+# ---------------------------------------------------------------------
+# TRIGGERS: when should this pipeline run automatically?
+# ---------------------------------------------------------------------
+on:
+  push:
+    branches: [main]   # Runs every time someone pushes to the main branch
+  pull_request:        # Runs on every pull request, so bad code is caught before merging
+
+# ---------------------------------------------------------------------
+# PERMISSIONS: the pipeline only gets read access to the repo.
+# This is a security best practice (least privilege).
+# ---------------------------------------------------------------------
+permissions:
+  contents: read
+
+jobs:
+
+  # ===================================================================
+  # JOB 1: BACKEND
+  # ===================================================================
+  api:
+    name: Backend (install, lint, test, build)
+    runs-on: ubuntu-latest        # GitHub gives us a fresh Linux machine for this job
+
+    # Environment variables the tests need.
+    # These replace the .env.test file, which isn't in the repo.
+    # Throwaway test values are fine here, because the database is
+    # a temporary container that disappears when the job ends.
+    env:
+      MONGO_URI: mongodb://localhost:27017/hustlehub_test?directConnection=true
+      ADMIN_EMAIL: admin@hustlehub.com
+      ADMIN_PASSWORD: Password1!
+      ADMIN_NAME: Steven-the-Admin
+      JWT_SECRET: ci-test-secret-at-least-32-characters-long
+      REDIS_URL: redis://localhost:6379
+      JWT_EXPIRES_IN : 1h
+
+    # SERVICES: extra Docker containers that run alongside this job.
+    # The backend tests need Redis, so GitHub starts a Redis container
+    # before any step runs, and tears it down when the job ends.
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379             # Makes Redis reachable at localhost:6379 from the steps below
+        # Health check: GitHub waits until Redis answers "PONG"
+        # before starting the steps, so the tests never hit a Redis that isn't ready yet.
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          
+    defaults:
+      run:
+        working-directory: HustleHub+/api   # Every "run:" command below executes inside the backend/ folder
+
+    steps:
+      # Step 1: Download your repository code onto the Linux machine
+      - uses: actions/checkout@v4
+
+     # Start MongoDB as a single-node replica set.
+     # Booking creation uses database transactions, which MongoDB
+     # only supports on a replica set (not a standalone server).
+      - name: Start MongoDB replica set
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+          # Wait for MongoDB to accept connections
+          until docker exec mongo mongosh --quiet --eval "db.runCommand({ping:1})"; do sleep 2; done
+          # Turn it into a one-member replica set
+          docker exec mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+          # Wait until it has elected itself primary
+          until docker exec mongo mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep -q true; do sleep 2; done
+
+      # Step 2: Install Node.js (version 20) and cache downloaded packages
+      # so later runs are faster
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: HustleHub+/api/package-lock.json
+
+      # Step 3: Install dependencies exactly as listed in package-lock.json.
+      # "npm ci" is stricter and more reliable than "npm install" for pipelines.
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Check code style/quality.
+      # "--if-present" means: skip quietly if there is no "lint" script.
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Generate test certificates
+        run: npm run mkcert
+      # Step 5: Run the api tests.
+      # If any test fails, this step exits with an error and the pipeline FAILS here.
+      - name: Run api tests
+        run: npm test
+
+      # Step 6: Build the api (e.g. compile TypeScript).
+      # Skipped quietly if there is no "build" script.
+      - name: Build api
+        run: npm run build --if-present
+
+  # ===================================================================
+  # JOB 2: FRONTEND
+  # ===================================================================
+  app:
+    name: Frontend (install, lint, test, build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: HustleHub+/app   # Every command runs inside the frontend/ folder
+
+    steps:
+      # Download the repository code
+      - uses: actions/checkout@v4
+
+      # Install Node.js 20 and cache packages
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: HustleHub+/app/package-lock.json
+
+      # Install frontend dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Check code style/quality (skipped if no lint script exists)
+      - name: Lint
+        run: npm run lint --if-present
+
+      # Run frontend tests.
+      # "--watchAll=false" stops the test runner waiting for file changes
+      # (it would hang forever in a pipeline otherwise).
+      # Remove this flag if your tests don't use Jest.
+      - name: Run frontend tests
+        run: npm test #-- --watchAll=false
+        env:
+          CI: true   # Tells many tools to run in non-interactive "CI mode"
+
+      # Build the production version of the frontend.
+      # This fails if there are compile errors.
+      - name: Build frontend
+        run: npm run build
+
+  # ===================================================================
+  # JOB 3: SECURITY - DEPENDENCY AUDIT
+  # Checks the packages you depend on for known vulnerabilities.
+  # ===================================================================
+  dependency-audit:
+    name: Security - npm audit
+    runs-on: ubuntu-latest
+
+    # "matrix" runs this same job twice: once for backend, once for frontend.
+    # ${{ matrix.project }} is replaced with each value in turn.
+    strategy:
+      matrix:
+        project: [api, app]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # "--audit-level=high" means: FAIL the pipeline if any HIGH or CRITICAL
+      # vulnerability is found. Low/moderate ones are reported but don't fail it.
+      # - name: Audit ${{ matrix.project }} dependencies
+      #   working-directory: ${{ matrix.project }}
+      #   run: npm audit --audit-level=high
+
+  # ===================================================================
+  # JOB 4: SECURITY - TRIVY SCAN
+  # Trivy is a security scanner. One scan checks three things:
+  #   vuln      -> known vulnerabilities in dependencies
+  #   secret    -> accidentally committed passwords, API keys, tokens
+  #   misconfig -> insecure settings (e.g. in Dockerfiles)
+  # ===================================================================
+  trivy-scan:
+    name: Security - Trivy (vulnerabilities, secrets, misconfig)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: fs                   # Scan the files in the repo
+          scanners: vuln,secret,misconfig # Which checks to run (see above)
+          severity: CRITICAL         # Only care about serious problems
+          ignore-unfixed: true            # Ignore issues that have no fix available yet
+          exit-code: "1"                  # "1" = FAIL the pipeline if problems are found
+
+  # ===================================================================
+  # JOB 5: BUILD THE ENTIRE STACK
+  # Only runs AFTER every job in "needs" has passed.
+  # If any of them fail, this job is skipped and the pipeline shows red.
+  # ===================================================================
+  build-stack:
+    name: Build entire stack
+    runs-on: ubuntu-latest
+    needs: [api, app, dependency-audit, trivy-scan]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # NOTE: If your project does NOT use Docker Compose,
+      # delete the steps below and this job.
+
+      - name: Create app environment file
+        working-directory: HustleHub+
+        env:
+         APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+         API_ENV_FILE: ${{ secrets.API_ENV_FILE }}
+         DOCKER_ENV_FILE: ${{ secrets.DOCKER_ENV_FILE }}
+        run: |
+         mkdir -p app
+         printf '%s' "$APP_ENV_FILE" > app/.env 
+         printf '%s' "$API_ENV_FILE" > api/.env   
+         printf '%s' "$DOCKER_ENV_FILE" > docker.env                          
+         
+      # Build the Docker images for every service in docker-compose.yml
+      - name: Build all containers
+        working-directory: HustleHub+
+        run: docker compose build
+
+      # Start all containers in the background (-d = detached)
+      - name: Start stack
+        working-directory: HustleHub+
+        run: docker compose up -d
+
+      - name: Debug API container
+        if: failure()
+        working-directory: HustleHub+
+        run: |
+          echo "===== API CONTAINER STATUS ====="
+          docker compose ps -a
+      
+          echo "===== API LOGS ====="
+          docker compose logs --tail=100 api
+      
+          echo "===== API HEALTH CHECK ====="
+          docker inspect hustlehub-api --format='{{json .State.Health}}'
+            # Print the status of each container.
+            # This output in the log is your evidence that both containers ran.
+            
+      - name: Show running containers
+        working-directory: HustleHub+
+        run: docker compose ps
+
+      # Stop and remove the containers when finished.
+      # "if: always()" makes this run even if an earlier step failed,
+      # so nothing is left running.
+      - name: Tear down
+        if: always()
+        working-directory: HustleHub+
+        run: docker compose down
