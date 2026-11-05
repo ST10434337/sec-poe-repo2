@@ -251,8 +251,21 @@ jobs:
         working-directory: HustleHub+
         run: docker compose up -d
 
-      # Print the status of each container.
-      # This output in the log is your evidence that both containers ran.
+      - name: Debug API container
+        if: failure()
+        working-directory: HustleHub+
+        run: |
+          echo "===== API CONTAINER STATUS ====="
+          docker compose ps -a
+      
+          echo "===== API LOGS ====="
+          docker compose logs --tail=100 api
+      
+          echo "===== API HEALTH CHECK ====="
+          docker inspect hustlehub-api --format='{{json .State.Health}}'
+            # Print the status of each container.
+            # This output in the log is your evidence that both containers ran.
+            
       - name: Show running containers
         working-directory: HustleHub+
         run: docker compose ps
