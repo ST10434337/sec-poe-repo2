@@ -39,6 +39,16 @@ jobs:
     name: Backend (install, lint, test, build)
     runs-on: ubuntu-latest        # GitHub gives us a fresh Linux machine for this job
 
+    # Environment variables the tests need.
+    # These replace the .env.test file, which isn't in the repo.
+    # Throwaway test values are fine here, because the database is
+    # a temporary container that disappears when the job ends.
+    env:
+      MONGO_URI: mongodb://localhost:27017/hustlehub_test
+      ADMIN_EMAIL: admin@hustlehub.com
+      ADMIN_PASSWORD: Password1!
+      ADMIN_NAME: Steven-the-Admin
+
     # SERVICES: extra Docker containers that run alongside this job.
     # The backend tests need Redis, so GitHub starts a Redis container
     # before any step runs, and tears it down when the job ends.
@@ -55,6 +65,17 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+ # MongoDB container for the tests (same idea as Redis above).
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          
     defaults:
       run:
         working-directory: HustleHub+/api   # Every "run:" command below executes inside the backend/ folder
