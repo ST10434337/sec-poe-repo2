@@ -91,14 +91,14 @@ jobs:
      # Booking creation uses database transactions, which MongoDB
      # only supports on a replica set (not a standalone server).
       - name: Start MongoDB replica set
-       run: |
-         docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
-         # Wait for MongoDB to accept connections
-         until docker exec mongo mongosh --quiet --eval "db.runCommand({ping:1})"; do sleep 2; done
-         # Turn it into a one-member replica set
-         docker exec mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
-         # Wait until it has elected itself primary
-         until docker exec mongo mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep -q true; do sleep 2; done
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+          # Wait for MongoDB to accept connections
+          until docker exec mongo mongosh --quiet --eval "db.runCommand({ping:1})"; do sleep 2; done
+          # Turn it into a one-member replica set
+          docker exec mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+          # Wait until it has elected itself primary
+          until docker exec mongo mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep -q true; do sleep 2; done
 
       # Step 2: Install Node.js (version 20) and cache downloaded packages
       # so later runs are faster
