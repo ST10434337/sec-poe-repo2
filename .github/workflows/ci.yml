@@ -102,6 +102,8 @@ jobs:
       - name: Lint
         run: npm run lint --if-present
 
+      - name: Generate test certificates
+        run: npm run mkcert
       # Step 5: Run the api tests.
       # If any test fails, this step exits with an error and the pipeline FAILS here.
       - name: Run api tests
