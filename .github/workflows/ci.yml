@@ -20,7 +20,7 @@ name: CI/CD Pipeline   # The name shown in the "Actions" tab on GitHub
 # ---------------------------------------------------------------------
 on:
   push:
-    branches: [main, CiCd]   # Runs every time someone pushes to the main branch
+    branches: [main]   # Runs every time someone pushes to the main branch
   pull_request:        # Runs on every pull request, so bad code is caught before merging
 
 # ---------------------------------------------------------------------
