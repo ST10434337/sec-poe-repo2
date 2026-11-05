@@ -147,7 +147,7 @@ jobs:
       # (it would hang forever in a pipeline otherwise).
       # Remove this flag if your tests don't use Jest.
       - name: Run frontend tests
-        run: npm test -- --watchAll=false
+        run: npm test #-- --watchAll=false
         env:
           CI: true   # Tells many tools to run in non-interactive "CI mode"
 
@@ -198,7 +198,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs                   # Scan the files in the repo
           scanners: vuln,secret,misconfig # Which checks to run (see above)
