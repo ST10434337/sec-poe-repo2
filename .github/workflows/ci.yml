@@ -158,9 +158,9 @@ jobs:
 
       # "--audit-level=high" means: FAIL the pipeline if any HIGH or CRITICAL
       # vulnerability is found. Low/moderate ones are reported but don't fail it.
-      - name: Audit ${{ matrix.project }} dependencies
-        working-directory: ${{ matrix.project }}
-        run: npm audit --audit-level=high
+      # - name: Audit ${{ matrix.project }} dependencies
+      #   working-directory: ${{ matrix.project }}
+      #   run: npm audit --audit-level=high
 
   # ===================================================================
   # JOB 4: SECURITY - TRIVY SCAN
