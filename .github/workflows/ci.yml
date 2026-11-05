@@ -231,15 +231,18 @@ jobs:
 
       # Build the Docker images for every service in docker-compose.yml
       - name: Build all containers
+        working-directory: HustleHub+
         run: docker compose build
 
       # Start all containers in the background (-d = detached)
       - name: Start stack
+        working-directory: HustleHub+
         run: docker compose up -d
 
       # Print the status of each container.
       # This output in the log is your evidence that both containers ran.
       - name: Show running containers
+        working-directory: HustleHub+
         run: docker compose ps
 
       # Stop and remove the containers when finished.
@@ -247,4 +250,5 @@ jobs:
       # so nothing is left running.
       - name: Tear down
         if: always()
+        working-directory: HustleHub+
         run: docker compose down
