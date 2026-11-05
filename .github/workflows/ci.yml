@@ -57,7 +57,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: api   # Every "run:" command below executes inside the backend/ folder
+        working-directory: HustleHub+/api   # Every "run:" command below executes inside the backend/ folder
 
     steps:
       # Step 1: Download your repository code onto the Linux machine
@@ -100,7 +100,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: app   # Every command runs inside the frontend/ folder
+        working-directory: HustleHub+/app   # Every command runs inside the frontend/ folder
 
     steps:
       # Download the repository code
