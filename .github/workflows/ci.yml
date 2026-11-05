@@ -67,17 +67,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-
- # MongoDB container for the tests (same idea as Redis above).
-      # mongo:
-      #   image: mongo:7
-      #   ports:
-      #     - 27017:27017
-      #   options: >-
-      #     --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1})'"
-      #     --health-interval 5s
-      #     --health-timeout 5s
-      #     --health-retries 10
           
     defaults:
       run:
@@ -148,7 +137,7 @@ jobs:
       # Install Node.js 20 and cache packages
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: HustleHub+/app/package-lock.json
 
