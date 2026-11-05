@@ -4,8 +4,7 @@
 - Docker Desktop running (`docker --version`, `docker compose version`)
 - `api/.env` exists
 - `docker.env` exists
-- `package-lock.json` exists in both `api/` and `app/` 'use `npm install` in each folder
-- Your IP is allowed in MongoDB Atlas (Network Access)
+- Your IP is allowed in MongoDB Atlas (Network Access) or are using a local db
 
 ## First-time setup
 
@@ -14,7 +13,7 @@ Run your cert script from the `api/` folder. Use your real script name:
 
 ```
 cd api
-npm run generate-certs
+npm run mkcert
 cd ..
 ```
 
