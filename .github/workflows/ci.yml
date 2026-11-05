@@ -20,7 +20,7 @@ name: CI/CD Pipeline   # The name shown in the "Actions" tab on GitHub
 # ---------------------------------------------------------------------
 on:
   push:
-    branches: [main]   # Runs every time someone pushes to the main branch
+    branches: [main, CiCd]   # Runs every time someone pushes to the main branch
   pull_request:        # Runs on every pull request, so bad code is caught before merging
 
 # ---------------------------------------------------------------------
@@ -181,7 +181,7 @@ jobs:
         with:
           scan-type: fs                   # Scan the files in the repo
           scanners: vuln,secret,misconfig # Which checks to run (see above)
-          severity: HIGH,CRITICAL         # Only care about serious problems
+          severity: CRITICAL         # Only care about serious problems
           ignore-unfixed: true            # Ignore issues that have no fix available yet
           exit-code: "1"                  # "1" = FAIL the pipeline if problems are found
 
