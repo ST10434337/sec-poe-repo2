@@ -1,52 +1,39 @@
-# Grafana Quick Guide (HustleHub)
+# Grafana Cloud Quick Guide (HustleHub)
 
-How to view and search API logs once the Docker stack is running.
+How to view and search API logs in Grafana Cloud.
 
-## 1. Start the stack
+## 1. Get access
 
-```bash
-docker compose up -d --build
-docker compose ps        # api, loki and grafana should all be "running"
-```
+1. Accept the invite email from Grafana (ask the admin if you don't have one).
+2. Sign in and open the team's stack: **https://YOURSTACK.grafana.net** (replace with your stack address).
+3. Set your own password or use single sign-on if it's enabled. Never share logins.
 
-## 2. Open Grafana
+Most people get the **Viewer** role (can view logs and dashboards). **Editor** is for people who build dashboards and alerts.
 
-- URL: **http://localhost:3200**
-- First login: `admin` / `admin` (you'll be asked to set a new password; do it)
+## 2. View logs
 
-## 3. One-time setup: connect Loki
-
-Only needed the first time (or after deleting the `grafana_data` volume).
-
-1. Left menu: **Connections → Data sources → Add data source**
-2. Choose **Loki**
-3. URL: `http://loki:3100` (use `loki`, not `localhost`; Grafana runs inside Docker)
-4. Click **Save & test**. You should see a green "successfully connected" message.
-
-## 4. View logs
-
-1. Left menu: **Explore** (compass icon)
-2. Select the **Loki** data source (top left)
+1. Left menu: **Explore** 
+2. Select the Loki data source at the top left (usually named `grafanacloud-...-logs`) > Explore Data (Top Right)
 3. Switch **Builder** to **Code** (toggle on the right)
 4. Enter a query and press **Shift+Enter**
-5. Set the time range (top right), e.g. **Last 15 minutes**
+5. Set the time range at the top right, e.g. **Last 15 minutes**
 
-## 5. Handy queries
+## 3. Handy queries
 
 | What you want | Query |
 |---|---|
 | All API logs | `{app="hustlehub-api"}` |
+| Production only | `{app="hustlehub-api", env="production"}` |
+| Development only | `{app="hustlehub-api", env="development"}` |
 | Errors only | `{app="hustlehub-api"} \| json \| level="error"` |
 | Warnings and errors | `{app="hustlehub-api"} \| json \| level=~"warn\|error"` |
 | Auth events | `{app="hustlehub-api"} \| json \| tag="AUTH"` |
 | Search for text | `{app="hustlehub-api"} \|= "logged in"` |
 | Exclude text | `{app="hustlehub-api"} != "health"` |
 | One user's activity | `{app="hustlehub-api"} \| json \| userId="abc123"` |
-| Slow requests (over 1s) | `{app="hustlehub-api"} \| json \| responseTime > 1000` |
 
 > If levels show as numbers instead of text, use `level="50"` for error, `40` for warn, `30` for info.
-
-### Tags
+> Always include the `env` label when debugging, so production and development logs don't get mixed up.
 
 |  |
 |---|
@@ -58,10 +45,9 @@ Only needed the first time (or after deleting the `grafana_data` volume).
 |`BOOKING`|
 |`MONGO`|
 
+## 4. Reading a log line
 
-## 6. Reading a log line
-
-Click any line in Explore to expand it. Fields you'll see:
+Click any line in Explore to expand it. Common fields:
 
 - `level`: severity (info, warn, error, fatal)
 - `tag`: category set in code (e.g. `AUTH`)
@@ -69,7 +55,7 @@ Click any line in Explore to expand it. Fields you'll see:
 - `req` / `res`: request and response details (from `pino-http`)
 - `err`: error message and stack trace
 
-## 7. Adding logs in code
+## 5. Adding logs in code
 
 Put the data object first and the message second:
 
@@ -81,6 +67,8 @@ authLog.info({ userId: user.id }, 'User has logged in');
 logger.error({ err, userId: user.id }, 'Failed to save user');
 ```
 
+### Tags
+
 | Level | Use for |
 |---|---|
 | `debug` | Developer detail |
@@ -89,36 +77,59 @@ logger.error({ err, userId: user.id }, 'Failed to save user');
 | `error` | An operation failed |
 | `fatal` | App can't continue |
 
-**Never log:** passwords, tokens, API keys, or full request bodies.
+**Never log:** passwords, tokens, API keys, or full request bodies. Be careful with personal data such as emails.
 
-## 8. Tips
+## 6. Environment setup (for developers)
+
+Logs are sent to Grafana Cloud using these variables. Put them in `./docker.env` (gitignored), never in the repo:
+
+```
+LOKI_HOST=https://logs-prod-XXX.grafana.net
+LOKI_USER=<numeric user ID>
+LOKI_API_KEY=<access policy token with logs:write>
+```
+
+- `LOKI_HOST` is the base URL only, with no `/loki/api/v1/push` on the end.
+- Set `NODE_ENV` to `development` or `production` so the `env` label is correct.
+- Set `LOG_LEVEL=debug` locally and `info` in production.
+- In CI tests, leave `LOKI_HOST` unset (or set `LOG_LEVEL=silent`) so tests don't ship logs.
+- Store `LOKI_API_KEY` in your CI/CD secrets for production.
+
+After changing variables, restart the API:
+
+```bash
+docker compose up -d --build
+```
+
+## 7. Tips
 
 - Use **Live** (top right in Explore) to tail logs in real time.
 - Logs are sent in batches every ~5 seconds, so allow a short delay.
-- Keep queries narrow: start with `{app="hustlehub-api"}` and a short time range.
+- Start with `{app="hustlehub-api"}` and a short time range, then narrow down.
 - Use **Label browser** in Explore to see which labels exist.
+- Keep labels to small, fixed sets (`app`, `env`, `tag`). Put IDs in the log body.
 
-## 9. Troubleshooting
+## 8. Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| Grafana won't open | Check the port mapping is `"3200:3000"` and run `docker compose ps` |
-| Save & test fails | Make sure the `loki` container is running; the URL must be `http://loki:3100` |
-| No logs appear | Hit an API route, wait ~5s, widen the time range; check `LOKI_HOST: http://loki:3100` is set on the `api` service |
+| No logs appear | Hit an API route, wait ~5s, widen the time range. Check the `env` label matches. |
 | Still nothing | Run `docker compose logs api` and look for `pino-loki` errors |
-| Lost dashboards/settings | Make sure the `grafana_data` and `loki_data` volumes exist; avoid `docker compose down -v` |
+| `401` error in API logs | `LOKI_USER` or `LOKI_API_KEY` is wrong |
+| `403` error in API logs | Token is missing the `logs:write` scope |
+| Connection or DNS error | `LOKI_HOST` must start with `https://`, end in `.grafana.net`, and not contain `internal` |
+| Can't see Explore | Ask an admin to check your role (Viewer or above) |
+| Logs seem missing for production | Check the query includes `env="production"` and the time range is correct |
 
-## 10. Useful commands
+## 9. Admin: managing the team
 
-```bash
-docker compose logs -f api       # live API console logs
-docker compose logs grafana      # Grafana startup errors
-docker compose restart grafana   # restart Grafana
-docker compose down              # stop the stack (keeps data)
-```
+- **Invite people:** in the Cloud Portal (grafana.com, My Account), open your stack and use the user/members settings, or in Grafana go to **Administration → Users and access**.
+- **Roles:** Viewer for most people, Editor for dashboard builders, Admin for very few.
+- **Tokens:** create them under **Administration → Users and access → Cloud access policies**. Use `logs:write` for the app only. Give each environment its own token if possible, so a leaked one can be revoked without breaking the others.
+- **Rotate tokens** if they were ever pasted into chat, a ticket, or the repo.
 
 ## Security notes
 
-- Don't expose ports 3100 (Loki) or 3200 (Grafana) publicly.
-- Change the default Grafana password.
-- Keep `LOKI_API_KEY` and other secrets out of the repo.
+- Keep `LOKI_API_KEY` and other secrets out of the repo and out of screenshots.
+- Don't give shared logins; invite each person individually.
+- Remove people from the stack when they leave the team.
