@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const logger = require('./utils/logger'); // Import the logger utility
 
 const dotenv = require('dotenv');
 
@@ -11,9 +12,11 @@ const baseEnvFile = path.resolve(process.cwd(), '.env');
 
 if (fs.existsSync(baseEnvFile)) {
     dotenv.config({ path: baseEnvFile });
+    logger.info('Base environment variables loaded from:', baseEnvFile);
 }
 if (fs.existsSync(envFile)) {
     dotenv.config({ path: envFile, override: true });
+    logger.warn('Environment variables loaded from:', envFile);
 }
 
 const isTestMode = process.env.NODE_ENV === 'test';
@@ -109,7 +112,6 @@ app.use('/api/transactions', transactionRoutes);
 // Admin routes (every route is admin only)
 app.use('/api/admin', rateLimit.rateLimiter(25, 15, 'admin'), adminRoutes);
 
-
 // Base Defined Routes
 
 // Root Endpoint
@@ -119,6 +121,7 @@ app.get('/', (req, res) => {
 
 // System Info Endpoint (available in dev/test as the collection expects) ~> (The IIE, 2026)
 if (isDevMode || isTestMode) {
+    logger.info(`Using environment ${process.env.NODE_ENV} - system info endpoint available`);
     app.get('/system-info', (req, res) => {
         res.json({
             app: process.env.APP_NAME || 'HustleHub+',
@@ -173,7 +176,7 @@ app.use(errorHandler);
 // Start the server based on the USE_HTTPS environment variable ~> (The IIE, 2026)
 if (require.main === module) {
     if (USE_HTTPS) {
-        console.log("Starting HTTPS...");
+        logger.info("Starting HTTPS...");
         const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'certs', 'localhost-key.pem');
         const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'certs', 'localhost-cert.pem');
 
@@ -183,13 +186,13 @@ if (require.main === module) {
         };
 
         https.createServer(httpsOptions, app).listen(PORT, () => {
-            console.log(`Application listening on port ${PORT} (HTTPS)`);
+            logger.info(`Application listening on port ${PORT} (HTTPS)`);
         });
     } else {
-        console.log("Starting HTTP...");
+        logger.info("Starting HTTP...");
         app.listen(PORT, () => {
-            console.log(`Application listening on port ${PORT}`);
-            console.log(`http://localhost:4000`)
+            logger.info(`Application listening on port ${PORT}`);
+            logger.info(`http://localhost:${PORT}`);
         });
     };
 }

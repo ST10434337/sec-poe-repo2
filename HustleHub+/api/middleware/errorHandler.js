@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
+const logger = require('../utils/logger'); // Import the logger utility
 
 // Final error handler: log the real error, but send only safe messages to the client
 const errorhandler = (err, req, res, next) => {
-    console.error(err.message);
+    logger.error(err.message);
 
     // The JSON body was invalid or too large for Express to parse
     if (err.type === 'entity.parse.failed')

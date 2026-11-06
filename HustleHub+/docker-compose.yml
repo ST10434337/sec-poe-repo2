@@ -11,6 +11,7 @@ services:
     environment:      
       CLIENT_ORIGIN: http://localhost:3000
       REDIS_URL: redis://redis:6379
+      LOKI_HOST: http://loki:3100
     ports:
       - "4000:4000"
     depends_on:
@@ -53,5 +54,28 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10   
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3200:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+
 volumes:
   redis_data:
+  loki_data:
+  grafana_data:
