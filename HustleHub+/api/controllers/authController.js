@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const { ROLES, PUBLIC_ROLES } = require('../utils/roles');
 const { stripTags } = require('../utils/sanitize');
+const logger = require('../utils/logger'); // Import the logger utility
+const authLogger = logger.child({ tag: 'AUTH' }); // Create a child logger for authentication
+const userId = require('../utils/logUtils'); // Import the logUtils utility
 
 // Check that a request field is a non-empty string (rejects objects such as { "$ne": null })
 const isFilledString = (value) => typeof value === 'string' && value.trim() !== '';
@@ -61,6 +64,8 @@ const registerUser = async (req, res) => {
         // Create new user and generate token
         const user = await User.create({ email: normalizedEmail, password, name: normalizedName, role: role ?? ROLES.CLIENT });
         const token = generateToken(user._id, user.role);
+
+        authLogger.info({ userId: user._id }, 'New user registered'); //
         // Send response with token and user info (excluding password)
         res.status(201).json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
     } catch (err) {
@@ -83,6 +88,7 @@ const registerUser = async (req, res) => {
 
         // Handle other errors
         if (process.env.NODE_ENV === 'Dev')
+            authLogger.error('Error during user registration:', err.message);
             console.error(err);
 
         res.status(500).json({
@@ -91,114 +97,123 @@ const registerUser = async (req, res) => {
     };
 };
 
-    // Login route handler function ~> (The IIE, 2026)
-    const loginUser = async (req, res) => {
-        try {
-            // Validate input (must be strings, so operator objects like { "$ne": null } are rejected)
-            const { email, password } = req.body || {};
-            if (!isFilledString(email) || !isFilledString(password)) {
-                return res.status(400).json({ message: 'Email and password are required' });
-            }
-            // Check if user exists and password matches
-            const user = await User.findOne({ email: email.toLowerCase().trim() });
-            if (!user || !(await user.comparePassword(password))) {
-                return res.status(401).json({ message: 'Invalid credentials' });
-            }
-            // Disabled accounts cannot log in (checked after the password, so it does not reveal which accounts exist)
-            if (user.isActive === false) {
-                return res.status(403).json({ message: 'Account is disabled' });
-            }
-            // Generate token and send response
-            const token = generateToken(user._id, user.role);
-            res.json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
-        } catch (err) {
-            // Handle errors
-            console.error(err);
-            res.status(500).json({ message: 'Server error' });
+// Login route handler function ~> (The IIE, 2026)
+const loginUser = async (req, res) => {
+    try {
+        // Validate input (must be strings, so operator objects like { "$ne": null } are rejected)
+        const { email, password } = req.body || {};
+        if (!isFilledString(email) || !isFilledString(password)) {
+            return res.status(400).json({ message: 'Email and password are required' });
         }
-    };
-
-    // Get current user route handler function
-    const getCurrentUser = async (req, res) => {
-        try {
-            // Fetch user data without password
-            const user = await User.findById(req.userId).select('-password');
-
-            // Token is valid but the account no longer exists
-            if (!user) return res.status(404).json({ message: 'User not found' });
-
-            res.json({ name: user.name, email: user.email, role: user.role });
-        } catch (err) {
-            // Handle errors
-            console.error(err);
-            res.status(500).json({ message: 'Server error' });
+        // Check if user exists and password matches
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
-    };
+        // Disabled accounts cannot log in (checked after the password, so it does not reveal which accounts exist)
+        if (user.isActive === false) {
+            return res.status(403).json({ message: 'Account is disabled' });
+        }
+        // Generate token and send response
+        const token = generateToken(user._id, user.role);
 
-    const becomeFreelancer = async (req, res) => {
-        try {
-            const user = await User.findById(req.userId);
-            if (!user) return res.status(404).json({ message: 'User not found' });
-            if (user.role === 'freelancer') {
-                return res.json({
-                    token: generateToken(user._id, user.role),
-                    user: { id: user._id, email: user.email, name: user.name, role: user.role }
-                });
-            }
-            if (user.role !== 'client') {
-                return res.status(409).json({ message: 'Only client accounts can become freelancers' });
-            }
+        authLogger.info({ userId: user._id }, 'User logged in'); //
+        res.json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
+    } catch (err) {
+        // Handle errors
+        authLogger.error('Error during user login:', err.message);
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
-            user.role = 'freelancer';
-            await user.save();
+// Get current user route handler function
+const getCurrentUser = async (req, res) => {
+    try {
+        // Fetch user data without password
+        const user = await User.findById(req.userId).select('-password');
 
-            res.json({
+        // Token is valid but the account no longer exists
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        authLogger.info({ userId: user._id }, 'Fetched current user'); //
+        res.json({ name: user.name, email: user.email, role: user.role });
+    } catch (err) {
+        // Handle errors
+        authLogger.error('Error fetching current user:', err.message);
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const becomeFreelancer = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (user.role === 'freelancer') {
+            return res.json({
                 token: generateToken(user._id, user.role),
                 user: { id: user._id, email: user.email, name: user.name, role: user.role }
             });
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ message: 'Server error' });
         }
-    };
-
-    const updateUserRole = async (req, res) => {
-        const { userId } = req.params;
-        const { role } = req.body || {};
-
-        if (!mongoose.isValidObjectId(userId)) {
-            return res.status(400).json({ message: 'Invalid user ID' });
-        }
-        if (!['freelancer', 'admin'].includes(role)) {
-            return res.status(400).json({ message: 'Role must be freelancer or admin' });
+        if (user.role !== 'client') {
+            return res.status(409).json({ message: 'Only client accounts can become freelancers' });
         }
 
-        try {
-            const user = await User.findById(userId);
-            if (!user) return res.status(404).json({ message: 'User not found' });
+        user.role = 'freelancer';
+        await user.save();
 
-            user.role = role;
-            await user.save();
+        authLogger.info({ userId: user._id }, 'User became a freelancer'); 
 
-            res.json({
-                user: { id: user._id, email: user.email, name: user.name, role: user.role }
-            });
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ message: 'Server error' });
-        }
-    };
+        res.json({
+            token: generateToken(user._id, user.role),
+            user: { id: user._id, email: user.email, name: user.name, role: user.role }
+        });
+    } catch (err) {
+        authLogger.error('Error during role update to freelancer:', err.message);
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
-    module.exports = {
-        generateToken,
-        testEmailFormat, // also used by scripts/createAdmin.js
-        testPassStrength, // and this ^
-        registerUser,
-        loginUser,
-        getCurrentUser,
-        becomeFreelancer,
-        updateUserRole
-    };
+const updateUserRole = async (req, res) => {
+    const { userId } = req.params;
+    const { role } = req.body || {};
+
+    if (!mongoose.isValidObjectId(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+    }
+    if (!['freelancer', 'admin'].includes(role)) {
+        return res.status(400).json({ message: 'Role must be freelancer or admin' });
+    }
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.role = role;
+        await user.save();
+        authLogger.info({ userId: userId }, `User: ${user._id} role updated to ${role}`);
+        res.json({
+            user: { id: user._id, email: user.email, name: user.name, role: user.role }
+        });
+    } catch (err) {
+        authLogger.error('Error during role update:', err.message);
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = {
+    generateToken,
+    testEmailFormat, // also used by scripts/createAdmin.js
+    testPassStrength, // and this ^
+    registerUser,
+    loginUser,
+    getCurrentUser,
+    becomeFreelancer,
+    updateUserRole
+};
 
 // GeeksforGeeks (2026) JavaScript - Validate Password in JS.
 //  Available at: https://www.geeksforgeeks.org/javascript/javascript-program-to-validate-password-using-regular-expressions/ (Accessed: 7 September 2026).

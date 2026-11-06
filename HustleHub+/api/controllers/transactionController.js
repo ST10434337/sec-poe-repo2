@@ -4,6 +4,10 @@ const { getFreelancerIncome } = require('../services/incomeService');
 const { parsePagination, pageInfo } = require('../utils/pagination');
 const { ROLES } = require('../utils/roles');
 
+const logger = require('../utils/logger');
+const transLogger = logger.child({ tag: 'TRANSACTIONS' });
+const userId = require('../utils/logUtils');
+
 // Get the booking status, gig title and both parties names 
 const withDetails = (query) => query
     .populate({ path: 'booking', select: 'status gig', populate: { path: 'gig', select: 'title' } })
@@ -17,6 +21,7 @@ const findTransactionsPage = async (filter, query) => {
         withDetails(Transaction.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit)),
         Transaction.countDocuments(filter),
     ]);
+    transLogger.info(`Transactions page accessed - page ${page}, limit ${limit}, total ${total}`);
     return { transactions, ...pageInfo(page, limit, total) };
 };
 
@@ -27,11 +32,13 @@ const getMyTransactions = async (req, res) => {
         ? { freelancer: req.userId }
         : { client: req.userId };
 
+    transLogger.info(`User ${userId} accessed their transactions`);
     res.json(await findTransactionsPage(filter, req.query));
 };
 
 // GET /api/transactions/income - the logged-in freelancers totals by status
 const getIncome = async (req, res) => {
+    transLogger.info(`Freelancer ${req.userId} accessed their income summary`);
     res.json(await getFreelancerIncome(req.userId));
 };
 
@@ -49,11 +56,13 @@ const getTransactionById = async (req, res) => {
     const transaction = await withDetails(Transaction.findOne(filter));
     if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
 
+    transLogger.info(`Transaction ${transaction._id} accessed by user ${userId}`);
     res.json({ transaction });
 };
 
 // GET /api/transactions - every transaction, for admins
 const listTransactions = async (req, res) => {
+    transLogger.info(`Admin ${req.userId} accessed all transactions - page ${req.query.page || 1}, limit ${req.query.limit || 10}`);
     res.json(await findTransactionsPage({}, req.query));
 };
 

@@ -12,6 +12,7 @@ services:
       CLIENT_ORIGIN: http://localhost:3000
       REDIS_URL: redis://redis:6379
       LOKI_HOST: http://loki:3100
+      LOG_LEVEL: silent
     ports:
       - "4000:4000"
     depends_on:

@@ -4,6 +4,10 @@ const { GIG_CATEGORIES } = require('../utils/gigCategories');
 const { escapeRegex, stripTags } = require('../utils/sanitize');
 const { parsePagination, pageInfo } = require('../utils/pagination');
 
+const logger = require('../utils/logger');
+const gigLogger = logger.child({ tag: 'GIGS' });
+const userId = require('../utils/logUtils');;
+
 // Only these fields may come from the client; owner and active status are set by the API
 const EDITABLE_FIELDS = ['title', 'description', 'category', 'price'];
 // Free-text fields that have HTML tags stripped before they are checked and saved
@@ -61,6 +65,7 @@ const findOwnedGig = async (req, res) => {
         return null;
     }
 
+    gigLogger.info(`Freelancer ${userId} accessed gig ${gig._id}`);
     return gig;
 };
 
@@ -98,6 +103,7 @@ const listGigs = async (req, res) => {
         Gig.countDocuments(filter),
     ]);
 
+    gigLogger.info(`Public gigs list accessed - page ${page}, limit ${limit}, total ${total}`);
     res.json({ gigs, ...pageInfo(page, limit, total) });
 };
 
@@ -111,6 +117,7 @@ const getMyGigs = async (req, res) => {
         Gig.countDocuments(filter),
     ]);
 
+    gigLogger.info(`Freelancer ${userId} accessed their gigs - page ${page}, limit ${limit}, total ${total}`);
     res.json({ gigs, ...pageInfo(page, limit, total) });
 };
 
@@ -126,6 +133,7 @@ const getGigById = async (req, res) => {
     if (!gig.isActive)
         return res.status(404).json({ message: 'Gig not found' });
 
+    gigLogger.info(`Public gig accessed: ${gig._id}`);
     await gig.populate('freelancer', 'name');
     res.json({ gig });
 };
@@ -137,6 +145,7 @@ const createGig = async (req, res) => {
     if (error) return res.status(400).json({ message: error });
 
     const gig = await Gig.create({ ...fields, freelancer: req.userId });
+    gigLogger.info(`Freelancer ${userId} created gig ${gig._id}`);
     res.status(201).json({ gig });
 };
 
@@ -155,6 +164,7 @@ const updateGig = async (req, res) => {
     // save() runs the schema validators, unlike findByIdAndUpdate by default
     gig.set(fields);
     await gig.save();
+    gigLogger.info(`Freelancer ${userId} updated gig ${gig._id}`);
     res.json({ gig });
 };
 
@@ -165,6 +175,7 @@ const deleteGig = async (req, res) => {
 
     gig.isActive = false;
     await gig.save();
+    gigLogger.info(`Freelancer ${userId} soft-deleted gig ${gig._id}`);
     res.json({ message: 'Gig deleted' });
 };
 
