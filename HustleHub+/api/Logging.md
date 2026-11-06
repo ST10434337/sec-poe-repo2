@@ -38,16 +38,18 @@ only to standard output.
 | Authentication (`api/controllers/authController.js`) | User registration, successful login, profile retrieval, becoming a freelancer, and role updates; handler errors include an error message | Provides an audit trail for key account changes and helps investigate failures in authentication handlers. Successful account events include the user ID. |
 | Gigs (`api/controllers/gigController.js`) | Public gig searches and detail views, a freelancer's own gig list and access, and gig creation, updates, and soft deletion | Shows when gig data is accessed or changed, including the relevant user or gig IDs where supplied. |
 | Bookings (`api/controllers/bookingController.js`) | Booking creation, client/freelancer booking lists, booking detail access, status changes, and cancellations | Supports tracing the booking lifecycle and its responsible user. |
-| Transactions (`api/controllers/transactionController.js`) | Transaction page access, a user's transactions, income summaries, individual transaction access, and admin listing | Helps trace access to payment records and income summaries. |
-| Administration (`api/controllers/adminController.js`) | User listing, account status changes, and moderation deletion of gigs | Provides a record of administrative reads and changes. |
+| Transactions (`api/controllers/transactionController.js`) | Transaction page access (page, limit, and total), a user's transaction access, income-summary access, individual transaction access, and admin listing. User, role, transaction, and pagination values are included in log messages where available. | Helps trace access to payment records and income summaries, and provides context for investigating transaction queries. |
+| Administration (`api/controllers/adminController.js`) | User listing, account status changes, and moderation deletion of gigs. Account status and gig deletion logs include the acting admin's ID and the affected record ID. | Provides an audit trail for administrative reads and changes. |
 | Central error handler (`api/middleware/errorHandler.js`) | The error message for errors passed to the handler | Helps diagnose unexpected request failures; clients receive a generic error response rather than the logged message. |
 
 Most business-event messages are logged at `info`; errors that reach the
 central handler and selected controller failures are logged at `error`.
 Environment-specific setup messages may use `warn`.
-Authentication, booking, and administrative events generally attach a user ID
-as structured data. Other events include relevant IDs and pagination details
-in their message text.
+Authentication and booking events generally attach a user ID as structured
+data. Gig and transaction identifiers and pagination values are generally
+included in message text instead. The user-list log currently supplies the
+imported `logUtils` value as `userId`, rather than the requesting admin's ID;
+do not rely on that field to identify the actor.
 
 ## Logging considerations
 
@@ -56,8 +58,3 @@ credentials or sensitive request data to log statements, and use stable
 structured fields for values that operators need to search or aggregate.
 Pino redaction only applies to the configured field paths; it is not a general
 secrets scanner.
-
-The `getUsers` log in `api/controllers/adminController.js` currently supplies
-the imported `logUtils` module as its `userId` value instead of the requesting
-user's ID. This can produce an incorrect structured field; use `req.userId`
-when correcting that log statement.

@@ -47,8 +47,10 @@ const getMyTransactions = async (req, res) => {
 
 // GET /api/transactions/income - the logged-in freelancers totals by status
 const getIncome = async (req, res) => {
+
     try{
     transLogger.info(`Freelancer ${req.userId} accessed their income summary`);
+
     res.json(await getFreelancerIncome(req.userId));
     } catch (error) {
         transLogger.error(`Error fetching freelancer income: ${error.message}`);
@@ -81,8 +83,10 @@ const getTransactionById = async (req, res) => {
 
 // GET /api/transactions - every transaction, for admins
 const listTransactions = async (req, res) => {
+
     try{
     transLogger.info(`Admin ${req.userId} accessed all transactions - page ${req.query.page || 1}, limit ${req.query.limit || 10}`);
+
     res.json(await findTransactionsPage({}, req.query));
     } catch (error) {
         transLogger.error(`Error listing all transactions: ${error.message}`);
