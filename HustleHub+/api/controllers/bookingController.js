@@ -8,6 +8,9 @@ const { ROLES } = require('../utils/roles');
 const { BOOKING_STATUS, TRANSACTION_STATUS } = require('../utils/statuses');
 const { stripTags } = require('../utils/sanitize');
 
+const logger = require('../utils/logger'); // Import the logger utility
+const bookingLogger = logger.child({ tag: 'BOOKING' }); // Create a child logger for Booking operations
+
 // Freelancer status flow: confirmed can only move to in progress, and in progress can only move to completed 
 const FREELANCER_NEXT_STATUS = {
     [BOOKING_STATUS.CONFIRMED]: BOOKING_STATUS.IN_PROGRESS,
@@ -33,6 +36,7 @@ const createBooking = async (req, res) => {
         return res.status(400).json({ message: 'You cannot book your own gig' });
 
     const { booking, transaction } = await createBookingWithTransaction(req.userId, gig);
+    bookingLogger.info({ userId: req.userId }, 'Booking created'); 
     res.status(201).json({ booking, transaction });
 };
 
@@ -51,6 +55,7 @@ const getMyBookings = async (req, res) => {
         Booking.countDocuments(filter),
     ]);
 
+    bookingLogger.info({ userId: req.userId }, 'Retrieved client bookings');
     res.json({ bookings, ...pageInfo(page, limit, total) });
 };
 
@@ -69,6 +74,7 @@ const getFreelancerBookings = async (req, res) => {
         Booking.countDocuments(filter),
     ]);
 
+    bookingLogger.info({ userId: req.userId }, 'Retrieved freelancer bookings');
     res.json({ bookings, ...pageInfo(page, limit, total) });
 };
 
@@ -96,6 +102,7 @@ const getBookingById = async (req, res) => {
     const transaction = await Transaction.findOne({ booking: booking._id })
         .select('reference status amount currency paymentMethod createdAt updatedAt');
 
+    bookingLogger.info({ userId: req.userId }, 'Retrieved booking details: ' + booking._id);
     res.json({ booking, transaction });
 };
 
@@ -124,6 +131,7 @@ const updateBookingStatus = async (req, res) => {
     // If another request changed the booking after it was loaded here, asks client to refresh
     if (!result.booking) return res.status(409).json({ message: UPDATED_ELSEWHERE });
 
+    bookingLogger.info({ userId: req.userId }, `Booking: ${booking._id} status updated`);
     res.json(result);
 };
 
@@ -164,6 +172,7 @@ const cancelBooking = async (req, res) => {
     // Another request changed the booking after we loaded it, so ask the client to refresh
     if (!result.booking) return res.status(409).json({ message: UPDATED_ELSEWHERE });
 
+    bookingLogger.info({ userId: req.userId }, `Booking: ${booking._id} cancelled`);
     res.json(result);
 };
 
