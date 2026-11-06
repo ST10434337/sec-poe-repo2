@@ -15,6 +15,7 @@ const withDetails = (query) => query
 
 // One page of transactions matching the filter, newest first
 const findTransactionsPage = async (filter, query) => {
+    try {
     const { page, limit, skip } = parsePagination(query);
     const [transactions, total] = await Promise.all([
         withDetails(Transaction.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit)),
@@ -22,10 +23,15 @@ const findTransactionsPage = async (filter, query) => {
     ]);
     transLogger.info(`Transactions page accessed - page ${page}, limit ${limit}, total ${total}`);
     return { transactions, ...pageInfo(page, limit, total) };
+    } catch (error) {
+        transLogger.error(`Error fetching transactions page: ${error.message}`);
+        throw error;
+    }
 };
 
 // GET /api/transactions/my-transactions - payments a client made, or payments a freelancer received
 const getMyTransactions = async (req, res) => {
+    try{
     // The route only allows clients and freelancers, so the caller is on one side of each transaction
     const filter = req.userRole === ROLES.FREELANCER
         ? { freelancer: req.userId }
@@ -33,16 +39,26 @@ const getMyTransactions = async (req, res) => {
 
     transLogger.info(`User ${req.userId} accessed their transactions`);
     res.json(await findTransactionsPage(filter, req.query));
+    } catch (error) {
+        transLogger.error(`Error fetching user transactions: ${error.message}`);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
 
 // GET /api/transactions/income - the logged-in freelancers totals by status
 const getIncome = async (req, res) => {
+    try{
     transLogger.info(`Freelancer ${req.userId} accessed their income summary`);
     res.json(await getFreelancerIncome(req.userId));
+    } catch (error) {
+        transLogger.error(`Error fetching freelancer income: ${error.message}`);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
 
 // GET /api/transactions/:id - one transaction, for either party or an admin
 const getTransactionById = async (req, res) => {
+    try{
     // reject malformed ids before querying MongoDB
     if (!mongoose.isObjectIdOrHexString(req.params.id))
         return res.status(400).json({ message: 'Invalid transaction id' });
@@ -57,12 +73,21 @@ const getTransactionById = async (req, res) => {
 
     transLogger.info(`Transaction ${transaction._id} accessed by user ${req.userId}`);
     res.json({ transaction });
+} catch (error) {
+    transLogger.error(`Error fetching transaction by id: ${error.message}`);
+    res.status(500).json({ message: 'Internal server error' });
+}
 };
 
 // GET /api/transactions - every transaction, for admins
 const listTransactions = async (req, res) => {
+    try{
     transLogger.info(`Admin ${req.userId} accessed all transactions - page ${req.query.page || 1}, limit ${req.query.limit || 10}`);
     res.json(await findTransactionsPage({}, req.query));
+    } catch (error) {
+        transLogger.error(`Error listing all transactions: ${error.message}`);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
 
 module.exports = {
