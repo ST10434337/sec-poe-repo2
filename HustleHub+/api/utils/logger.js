@@ -12,10 +12,10 @@ if (process.env.LOKI_HOST) {
     level: 'info',
     options: {
       host: process.env.LOKI_HOST,
-    //   basicAuth: {
-    //     username: process.env.LOKI_USER,
-    //     password: process.env.LOKI_API_KEY,
-    //   },
+      basicAuth: {
+        username: process.env.LOKI_USER,
+        password: process.env.LOKI_API_KEY,
+      },
       labels: { app: 'hustlehub-api', env: process.env.NODE_ENV || 'development' },
       batching: true,
       interval: 5, // seconds

@@ -9,12 +9,12 @@ const adminLogger = logger.child({ tag: 'ADMIN'});
 
 // GET /api/admin/users - every user, newest first; passwords are never returned ~> (The IIE, 2026)
 const getUsers = async (req, res) => {
-    adminLogger.info({userId: userId}, 'Called getUsers');
     const { page, limit, skip } = parsePagination(req.query);
     const [users, total] = await Promise.all([
         User.find().select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
         User.countDocuments(),
     ]);
+    adminLogger.info({userId: userId}, 'Called getUsers');
 
     res.json({ users, ...pageInfo(page, limit, total) });
 };
