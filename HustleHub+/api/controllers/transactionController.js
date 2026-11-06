@@ -6,7 +6,6 @@ const { ROLES } = require('../utils/roles');
 
 const logger = require('../utils/logger');
 const transLogger = logger.child({ tag: 'TRANSACTIONS' });
-const userId = require('../utils/logUtils');
 
 // Get the booking status, gig title and both parties names 
 const withDetails = (query) => query
@@ -32,7 +31,7 @@ const getMyTransactions = async (req, res) => {
         ? { freelancer: req.userId }
         : { client: req.userId };
 
-    transLogger.info(`User ${userId} accessed their transactions`);
+    transLogger.info(`User ${req.userId} accessed their transactions`);
     res.json(await findTransactionsPage(filter, req.query));
 };
 
@@ -56,7 +55,7 @@ const getTransactionById = async (req, res) => {
     const transaction = await withDetails(Transaction.findOne(filter));
     if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
 
-    transLogger.info(`Transaction ${transaction._id} accessed by user ${userId}`);
+    transLogger.info(`Transaction ${transaction._id} accessed by user ${req.userId}`);
     res.json({ transaction });
 };
 

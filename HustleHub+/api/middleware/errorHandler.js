@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const logger = require('../utils/logger'); // Import the logger utility
-const errorLogger = logger.child({ tag: 'ERROR_HANDLER' }); // Create a child logger for error handling
+const errorLogger = logger.child({ tag: 'ERROR' }); // Create a child logger for error handling
 
 // Final error handler: log the real error, but send only safe messages to the client
 const errorhandler = (err, req, res, next) => {

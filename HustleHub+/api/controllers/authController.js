@@ -5,7 +5,6 @@ const { ROLES, PUBLIC_ROLES } = require('../utils/roles');
 const { stripTags } = require('../utils/sanitize');
 const logger = require('../utils/logger'); // Import the logger utility
 const authLogger = logger.child({ tag: 'AUTH' }); // Create a child logger for authentication
-const userId = require('../utils/logUtils'); // Import the logUtils utility
 
 // Check that a request field is a non-empty string (rejects objects such as { "$ne": null })
 const isFilledString = (value) => typeof value === 'string' && value.trim() !== '';
