@@ -1,0 +1,31 @@
+$kind: http-request
+name: POST /api/auth/logout
+url: "{{base_url}}/api/auth/logout"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{client_email}}",
+      "password": "{{client_password}}"
+    }
+auth:
+  type: inherit
+  credentials:
+    id: 6e0174a4-9685-4730-94a5-55c003764d9a
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('logs in and saves the JWT for ', function () {
+        pm.response.to.have.status(200);
+        pm.expect(body.token).to.be.a('string').and.not.empty;
+        pm.expect(body.user.role).to.eql('client');
+        pm.environment.set('client_token', body.token);
+        pm.environment.set('auth_token', body.token);
+        pm.environment.set('client_user_id', body.user.id);
+      });
+    language: text/javascript
+order: 3410

@@ -5,6 +5,7 @@ const { ROLES, PUBLIC_ROLES } = require('../utils/roles');
 const { stripTags } = require('../utils/sanitize');
 const logger = require('../utils/logger'); // Import the logger utility
 const authLogger = logger.child({ tag: 'AUTH' }); // Create a child logger for authentication
+const RevokedToken = require('../models/RevokedToken'); // Import the RevokedToken model
 
 // Check that a request field is a non-empty string (rejects objects such as { "$ne": null })
 const isFilledString = (value) => typeof value === 'string' && value.trim() !== '';
@@ -220,6 +221,39 @@ const updateUserRole = async (req, res) => {
     }
 };
 
+const logoutUser = async (req, res) => {
+    try {
+        const decoded = jwt.decode(req.token);
+
+        if (!decoded?.exp) {
+            return res.status(400).json({
+                message: 'Invalid token expiry information.'
+            });
+        }
+
+        // Revoke token using the model
+        await RevokedToken.revokeToken(
+            req.token,
+            new Date(decoded.exp * 1000)
+        );
+
+        return res.status(200).json({
+            message: 'Logout successful. Token revoked.'
+        });
+
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(200).json({
+                message: 'Token already revoked.'
+            });
+        }
+
+        return res.status(500).json({
+            message: 'Unable to process logout.'
+        });
+    }
+};
+
 module.exports = {
     generateToken,
     testEmailFormat, // also used by scripts/createAdmin.js
@@ -228,7 +262,8 @@ module.exports = {
     loginUser,
     getCurrentUser,
     becomeFreelancer,
-    updateUserRole
+    updateUserRole,
+    logoutUser
 };
 
 // GeeksforGeeks (2026) JavaScript - Validate Password in JS.

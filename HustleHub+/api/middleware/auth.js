@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken'); //(The IIE, 2026)
 const User = require('../models/User');
+const RevokedToken = require('../models/RevokedToken');
 
 // RBAC (IIE, 2026)
-function authenticateRequest(req, res) {
+async function authenticateRequest(req, res) {
 
   // Check for the Authorization header
   const authHeader = req.headers.authorization;
@@ -11,16 +12,22 @@ function authenticateRequest(req, res) {
     return false;
   }
 
-  //  Extract the token from the header
-  const token = authHeader.split(' ')[1];
-  if (!token) {
-    res.status(401).json({ message: 'Invalid token provided' });
-    return false;
-  }
-
   // Verify the token and extract the payload
   try {
+      //  Extract the token from the header
+    const token = authHeader.split(' ')[1] || null;
+    if (!token) {
+      res.status(401).json({ message: 'Invalid token provided' });
+      return false;
+    }
+
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+
+    const revoked = await RevokedToken.isRevoked(token);
+    if (revoked) {
+      res.status(401).json({ message: 'Session Expired. Please log in again.' });
+      return false;
+    }
 
     if (!payload.userId || !payload.role) {
       res.status(401).json({ message: 'Invalid token payload' });
@@ -30,6 +37,8 @@ function authenticateRequest(req, res) {
     req.user = payload;
     req.userId = String(payload.userId); // Ensure userId is a string for consistent comparisons and SonarQube analysis
     req.userRole = String(payload.role); // Same as above
+    console.log(`Authenticated user: ${req.userId} with role: ${req.userRole}`); // Debugging log
+    req.token = token; // Store the token for potential revocation checks
     return true;
   } catch {
     res.status(401).json({ message: 'Invalid or expired token' });
@@ -59,7 +68,7 @@ async function loadActiveUser(req, res) {
 
 // Any logged-in, active user
 const requireAuth = async (req, res, next) => {
-  if (!authenticateRequest(req, res)) return;
+  if (!(await authenticateRequest(req, res))) return;
 
   try {
     if (await loadActiveUser(req, res)) next();
@@ -70,7 +79,7 @@ const requireAuth = async (req, res, next) => {
 
 // Logged-in, active user with one of the allowed roles
 const allowRoles = (...allowedRoles) => async (req, res, next) => {
-  if (!authenticateRequest(req, res)) return;
+  if (!(await authenticateRequest(req, res))) return;
 
   try {
     const user = await loadActiveUser(req, res);

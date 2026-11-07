@@ -29,4 +29,4 @@ scripts:
         pm.environment.set('client_user_id', body.user.id);
       });
     language: text/javascript
-order: 2000
+order: 1000
