@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const crypto = require('crypto');
+const bcrypt = require('bcrypt');//(The IIE, 2026)
 
 const revokedTokenSchema = new mongoose.Schema({
     tokenHash: {
@@ -16,16 +16,13 @@ const revokedTokenSchema = new mongoose.Schema({
 });
 
 // Hash a JWT token
-revokedTokenSchema.statics.hashToken = function(token) {
-    return crypto
-        .createHash('sha256')
-        .update(token)
-        .digest('hex');
+revokedTokenSchema.statics.hashToken = async function(token) {
+    return await bcrypt.Hash(token, 12);
 };
 
 // Revoke a JWT token
 revokedTokenSchema.statics.revokeToken = async function(token, expiresAt) {
-    const tokenHash = this.hashToken(token);
+    const tokenHash = await this.hashToken(token);
 
     return await this.create({
         tokenHash,

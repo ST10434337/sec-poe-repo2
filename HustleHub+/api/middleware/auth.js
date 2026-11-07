@@ -21,13 +21,15 @@ async function authenticateRequest(req, res) {
       return false;
     }
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    
 
     const revoked = await RevokedToken.isRevoked(token);
     if (revoked) {
       res.status(401).json({ message: 'Session Expired. Please log in again.' });
       return false;
     }
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
 
     if (!payload.userId || !payload.role) {
       res.status(401).json({ message: 'Invalid token payload' });
