@@ -32,9 +32,9 @@ const rateLimit = require("./middleware/rateLimit");
 
 const app = express();
 
-// Set DNS servers to Google's public DNS servers for reliable name resolution
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// Use the DNS servers from DNS_SERVERS in .env (if set) for reliable name resolution
+const { applyDnsServers } = require('./config/dns');
+applyDnsServers();
 // .env variables
 const PORT = process.env.PORT || 4000;
 const USE_HTTPS = process.env.USE_HTTPS === 'true';

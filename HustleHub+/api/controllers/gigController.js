@@ -88,7 +88,8 @@ const listGigs = async (req, res) => {
             if (typeof q !== 'string' || q.length > MAX_SEARCH_LENGTH)
                 return res.status(400).json({ message: `Search must be text of up to ${MAX_SEARCH_LENGTH} characters` });
 
-            const search = q.trim();
+            // String() makes sure only plain text reaches the query, never an object like { "$ne": "" } ~> (SonarSource, n.d.b)
+            const search = String(q).trim();
             if (search) {
                 const pattern = new RegExp(escapeRegex(search), 'i');
                 filter.$or = [{ title: { $regex: pattern } }, { description: { $regex: pattern } }];
@@ -97,9 +98,11 @@ const listGigs = async (req, res) => {
 
         // An empty category means "all categories"
         if (category !== undefined && category !== '') {
-            if (!GIG_CATEGORIES.includes(category))
+            // Use our own copy of the category name from the allow-list, not the value the user sent
+            const knownCategory = GIG_CATEGORIES.find((name) => name === category);
+            if (!knownCategory)
                 return res.status(400).json({ message: 'Invalid category' });
-            filter.category = { $eq: category };
+            filter.category = { $eq: knownCategory };
         }
         // Uses skip/limit pagination and countDocuments to return one page plus the total result count ~> (Mongoose, n.d.)
         const { page, limit, skip } = parsePagination(req.query);
