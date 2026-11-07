@@ -111,8 +111,10 @@ jobs:
         run: npm run mkcert
       # Step 5: Run the api tests.
       # If any test fails, this step exits with an error and the pipeline FAILS here.
-      - name: Run api tests
-        run: npm test
+      # - name: Run api tests
+      #   run: npm test
+      - name: Run api tests with coverage
+        run: npm run test:coverage
 
       # Run the unit tests too (tax maths and tax tables).
       # These need no database or server.
@@ -123,6 +125,13 @@ jobs:
       # Skipped quietly if there is no "build" script.
       - name: Build api
         run: npm run build --if-present
+      # Upload API coverage for the separate SonarQube workflow
+      - name: Upload API coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: HustleHub+/api/coverage/lcov.info
+          if-no-files-found: error
 
   # ===================================================================
   # JOB 2: FRONTEND
@@ -158,10 +167,22 @@ jobs:
       # "--watchAll=false" stops the test runner waiting for file changes
       # (it would hang forever in a pipeline otherwise).
       # Remove this flag if your tests don't use Jest.
-      - name: Run frontend tests
-        run: npm test #-- --watchAll=false
+      # - name: Run frontend tests
+      #   run: npm test #-- --watchAll=false
+      #   env:
+      #     CI: true   # Tells many tools to run in non-interactive "CI mode"
+      - name: Run frontend tests with coverage
+        run: npm run test-cov
         env:
-          CI: true   # Tells many tools to run in non-interactive "CI mode"
+          CI: true
+
+      # Upload frontend coverage for the separate SonarQube workflow
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: HustleHub+/app/coverage/lcov.info
+          if-no-files-found: error
 
       # Build the production version of the frontend.
       # This fails if there are compile errors.
