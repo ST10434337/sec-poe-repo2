@@ -87,8 +87,8 @@ const registerUser = async (req, res) => {
 
         // Handle other errors
         if (process.env.NODE_ENV === 'Dev')
-            authLogger.error('Error during user registration:', err.message);
-            console.error(err);
+           { authLogger.error('Error during user registration:', err.message);
+            console.error(err);}
 
         res.status(500).json({
             message: 'Server error'
@@ -104,9 +104,24 @@ const loginUser = async (req, res) => {
         if (!isFilledString(email) || !isFilledString(password)) {
             return res.status(400).json({ message: 'Email and password are required' });
         }
-        // Check if user exists and password matches
+        
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user || !(await user.comparePassword(password))) {
+        // Check is user Exists
+        if (!user) {
+            authLogger.warn({ email: email.toLowerCase().trim() }, 'Failed login attempt: user not found');
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        // Check if the account is locked due to multiple failed login attempts
+        if(user.lockUntil > Date.now()) {
+            return res.status(403).json({ message: 'Account is temporarily locked due to multiple failed login attempts. Please try again later.' });
+        }
+        // Check if password matches
+        if (!(await user.comparePassword(password))) {
+            user.loginAttempts = user.loginAttempts + 1; // Increment failed login attempts
+            if(user.loginAttempts >= 5) { // Lock account after 5 failed attempts
+                user.lockUntil = Date.now() + 15 * 60 * 1000; // Lock for 15 minutes
+            }
+            await user.save(); // Save the updated user document
             return res.status(401).json({ message: 'Invalid credentials' });
         }
         // Disabled accounts cannot log in (checked after the password, so it does not reveal which accounts exist)
@@ -117,6 +132,8 @@ const loginUser = async (req, res) => {
         const token = generateToken(user._id, user.role);
 
         authLogger.info({ userId: user._id }, 'User logged in'); //
+        user.loginAttempts = 0; // Reset failed login attempts on successful login
+        await user.save(); // Save the updated user document
         res.json({ token, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
     } catch (err) {
         // Handle errors
