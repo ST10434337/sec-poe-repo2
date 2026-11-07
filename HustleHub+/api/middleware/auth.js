@@ -19,9 +19,7 @@ async function authenticateRequest(req, res) {
     if (!token) {
       res.status(401).json({ message: 'Invalid token provided' });
       return false;
-    }
-
-    
+    }   
 
     const revoked = await RevokedToken.isRevoked(token);
     if (revoked) {

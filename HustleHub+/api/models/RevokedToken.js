@@ -17,7 +17,8 @@ const revokedTokenSchema = new mongoose.Schema({
 
 // Hash a JWT token
 revokedTokenSchema.statics.hashToken = async function(token) {
-    return await bcrypt.Hash(token, 12);
+    const hashedToken = await bcrypt.hash(token, 12);
+    return hashedToken;
 };
 
 // Revoke a JWT token
@@ -32,7 +33,7 @@ revokedTokenSchema.statics.revokeToken = async function(token, expiresAt) {
 
 // Check whether a JWT token has been revoked
 revokedTokenSchema.statics.isRevoked = async function(token) {
-    const tokenHash = this.hashToken(token);
+    const tokenHash = await this.hashToken(token);
 
     const revokedToken = await this.findOne({
         tokenHash,
