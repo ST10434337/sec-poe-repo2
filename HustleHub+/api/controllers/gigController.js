@@ -6,6 +6,8 @@ const { parsePagination, pageInfo } = require('../utils/pagination');
 
 const logger = require('../utils/logger');
 const gigLogger = logger.child({ tag: 'GIGS' });
+// User values are logged as their own fields, not inside the message text,
+// so they can't add fake lines to the log ~> (SonarSource, n.d.a; OWASP, n.d.)
 
 // Only these fields may come from the client; owner and active status are set by the API
 const EDITABLE_FIELDS = ['title', 'description', 'category', 'price'];
@@ -65,7 +67,7 @@ const findOwnedGig = async (req, res) => {
             return null;
         }
 
-        gigLogger.info(`Freelancer ${req.userId} accessed gig ${gig._id}`);
+        gigLogger.info({ userId: req.userId, gigId: gig._id }, 'Freelancer accessed gig');
         return gig;
     } catch (error) {
         gigLogger.error(`Error finding owned gig: ${error.message}`);
@@ -81,6 +83,7 @@ const listGigs = async (req, res) => {
         const filter = { isActive: true };
 
         // Search text is escaped so it is matched literally against the title and description
+        // $regex and $eq make sure the values are only ever used as plain values, never as query operators ~> (SonarSource, n.d.b; MongoDB, n.d.a; MongoDB, n.d.b)
         if (q !== undefined) {
             if (typeof q !== 'string' || q.length > MAX_SEARCH_LENGTH)
                 return res.status(400).json({ message: `Search must be text of up to ${MAX_SEARCH_LENGTH} characters` });
@@ -88,7 +91,7 @@ const listGigs = async (req, res) => {
             const search = q.trim();
             if (search) {
                 const pattern = new RegExp(escapeRegex(search), 'i');
-                filter.$or = [{ title: pattern }, { description: pattern }];
+                filter.$or = [{ title: { $regex: pattern } }, { description: { $regex: pattern } }];
             }
         }
 
@@ -96,7 +99,7 @@ const listGigs = async (req, res) => {
         if (category !== undefined && category !== '') {
             if (!GIG_CATEGORIES.includes(category))
                 return res.status(400).json({ message: 'Invalid category' });
-            filter.category = category;
+            filter.category = { $eq: category };
         }
         // Uses skip/limit pagination and countDocuments to return one page plus the total result count ~> (Mongoose, n.d.)
         const { page, limit, skip } = parsePagination(req.query);
@@ -128,7 +131,7 @@ const getMyGigs = async (req, res) => {
             Gig.countDocuments(filter),
         ]);
 
-        gigLogger.info(`Freelancer ${req.userId} accessed their gigs - page ${page}, limit ${limit}, total ${total}`);
+        gigLogger.info({ userId: req.userId, page, limit, total }, 'Freelancer accessed their gigs');
         res.json({ gigs, ...pageInfo(page, limit, total) });
     } catch (error) {
         gigLogger.error(`Error getting freelancer's gigs: ${error.message}`);
@@ -166,7 +169,7 @@ const createGig = async (req, res) => {
         if (error) return res.status(400).json({ message: error });
 
         const gig = await Gig.create({ ...fields, freelancer: req.userId });
-        gigLogger.info(`Freelancer ${req.userId} created gig ${gig._id}`);
+        gigLogger.info({ userId: req.userId, gigId: gig._id }, 'Freelancer created gig');
         res.status(201).json({ gig });
     } catch (error) {
         gigLogger.error(`Error creating gig: ${error.message}`);
@@ -190,7 +193,7 @@ const updateGig = async (req, res) => {
         // save() runs the schema validators, unlike findByIdAndUpdate by default
         gig.set(fields);
         await gig.save();
-        gigLogger.info(`Freelancer ${req.userId} updated gig ${gig._id}`);
+        gigLogger.info({ userId: req.userId, gigId: gig._id }, 'Freelancer updated gig');
         res.json({ gig });
     } catch (error) {
         gigLogger.error(`Error updating gig: ${error.message}`);
@@ -206,7 +209,7 @@ const deleteGig = async (req, res) => {
 
         gig.isActive = false;
         await gig.save();
-        gigLogger.info(`Freelancer ${req.userId} soft-deleted gig ${gig._id}`);
+        gigLogger.info({ userId: req.userId, gigId: gig._id }, 'Freelancer soft-deleted gig');
         res.json({ message: 'Gig deleted' });
     } catch (error) {
         gigLogger.error(`Error deleting gig: ${error.message}`);
@@ -224,3 +227,9 @@ module.exports = {
 };
 //The Independent Institute of Education (IIE). 2026. Information Systems 3D (INSY7314/w): Module manual. The Independent Institute of Education (Pty) Ltd.
 // Mongoose. n.d. Queries: Pagination. Available at: https://mongoosejs.com/docs/queries.html#pagination (Accessed: 8 October 2026).
+
+// MongoDB. n.d.a. $eq. [online]. Available at: https://www.mongodb.com/docs/manual/reference/operator/query/eq/. [Accessed 7 November 2026]
+// MongoDB. n.d.b. $regex. [online]. Available at: https://www.mongodb.com/docs/manual/reference/operator/query/regex/. [Accessed 7 November 2026]
+// OWASP. n.d. Logging Cheat Sheet. [online]. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html. [Accessed 7 November 2026]
+// SonarSource. n.d.a. Logging should not be vulnerable to injection attacks (jssecurity:S5145). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=jssecurity%3AS5145&rule_key=jssecurity%3AS5145. [Accessed 7 November 2026]
+// SonarSource. n.d.b. NoSQL operations should not be vulnerable to injection attacks (jssecurity:S5147). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=jssecurity%3AS5147&rule_key=jssecurity%3AS5147. [Accessed 7 November 2026]

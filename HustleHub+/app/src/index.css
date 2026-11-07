@@ -336,6 +336,14 @@ main.container {
   margin-top: 0.3rem;
 }
 
+.choice-text {
+  font-weight: bold;
+}
+
+.choice-text .muted {
+  font-weight: normal;
+}
+
 .choice:has(input:checked) {
   border-color: var(--primary);
   background: #eff6ff;

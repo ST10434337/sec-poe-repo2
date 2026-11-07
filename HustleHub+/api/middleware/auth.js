@@ -37,7 +37,6 @@ async function authenticateRequest(req, res) {
     req.user = payload;
     req.userId = String(payload.userId); // Ensure userId is a string for consistent comparisons and SonarQube analysis
     req.userRole = String(payload.role); // Same as above
-    console.log(`Authenticated user: ${req.userId} with role: ${req.userRole}`); // Debugging log
     req.token = token; // Store the token for potential revocation checks
     return true;
   } catch {

@@ -86,14 +86,15 @@ function BookingDetailPage() {
         ? `Mark this booking as completed?\n\nThis releases the payment of ${price} to you.`
         : 'Start work on this booking?\n\nThe client can no longer cancel it after this.'
     if (!window.confirm(question)) return
-    runAction(() => updateBookingStatus(booking._id, nextStep.status), nextStep.done)
+    // runAction catches its own errors, so its promise is not awaited here ~> (SonarSource, n.d.; MDN Web Docs, n.d.)
+    void runAction(() => updateBookingStatus(booking._id, nextStep.status), nextStep.done)
   }
 
   function handleCancel(e) {
     e.preventDefault()
     const sure = window.confirm(`Cancel this booking?\n\nYour payment of ${price} will be refunded.`)
     if (!sure) return
-    runAction(() => cancelBooking(booking._id, reason), 'Booking cancelled. Your payment was refunded.')
+    void runAction(() => cancelBooking(booking._id, reason),'Booking cancelled. Your payment was refunded.')
   }
 
   return (
@@ -191,3 +192,6 @@ function BookingDetailPage() {
 }
 
 export default BookingDetailPage
+
+// MDN Web Docs. n.d. void operator. [online]. Available at: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void. [Accessed 7 November 2026]
+// SonarSource. n.d. Promises should not be left unhandled (javascript:S9383). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS9383&rule_key=javascript%3AS9383. [Accessed 7 November 2026]

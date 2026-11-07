@@ -93,4 +93,11 @@ async function dropMongoCollections() {                 //  Function to drop all
     await mongoose.disconnect();                        // Disconnect from the database after dropping it to free up resources
 }
 
-runNewmanTests();                                       // Execute the function to run Newman tests and handle setup, execution, and cleanup
+// Execute the function to run Newman tests and handle setup, execution, and cleanup
+// Any error not handled inside makes the test run fail ~> (SonarSource, n.d.)
+runNewmanTests().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});
+
+// SonarSource. n.d. Promises should not be left unhandled (javascript:S9383). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS9383&rule_key=javascript%3AS9383. [Accessed 7 November 2026]
