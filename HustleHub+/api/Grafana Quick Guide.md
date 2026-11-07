@@ -28,6 +28,7 @@ Most people get the **Viewer** role (can view logs and dashboards). **Editor** i
 | Errors only | `{app="hustlehub-api"} \| json \| level="error"` |
 | Warnings and errors | `{app="hustlehub-api"} \| json \| level=~"warn\|error"` |
 | Auth events | `{app="hustlehub-api"} \| json \| tag="AUTH"` |
+| Tax events | `{app="hustlehub-api"} \| json \| tag="TRANSACTIONS" \|= "tax"` |
 | Search for text | `{app="hustlehub-api"} \|= "logged in"` |
 | Exclude text | `{app="hustlehub-api"} != "health"` |
 | One user's activity | `{app="hustlehub-api"} \| json \| userId="abc123"` |

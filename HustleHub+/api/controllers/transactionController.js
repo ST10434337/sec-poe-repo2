@@ -61,7 +61,13 @@ const getIncome = async (req, res) => {
 // GET /api/transactions/tax - the logged-in freelancer's estimated tax for this tax year
 // The id comes from their token, so nobody can ask for another freelancer's figures
 const getTaxSummary = async (req, res) => {
-    res.json(await getFreelancerTaxSummary(req.userId));
+    try {
+        transLogger.info(`Freelancer ${req.userId} accessed their tax summary`);
+        res.json(await getFreelancerTaxSummary(req.userId));
+    } catch (error) {
+        transLogger.error(`Error fetching tax summary: ${error.message}`);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };
 
 // GET /api/transactions/:id - one transaction, for either party or an admin

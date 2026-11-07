@@ -3,6 +3,8 @@ const Transaction = require('../models/Transaction');
 const { TRANSACTION_STATUS } = require('../utils/statuses');
 const { getTaxTable } = require('../config/taxTables');
 const { getTaxYear, buildTaxSummary } = require('./taxService');
+const logger = require('../utils/logger');
+const taxLogger = logger.child({ tag: 'TRANSACTIONS' });
 
 // Group payments by the month they were paid in South Africa, not in UTC
 const SA_TIMEZONE = 'Africa/Johannesburg';
@@ -72,9 +74,14 @@ const getFreelancerTaxSummary = async (freelancerId, now = new Date()) => {
         ]),
     ]);
 
+    // SARS figures change most years, so flag when an older table is filling in
+    const table = getTaxTable(taxYear.year);
+    if (table.year !== taxYear.year)
+        taxLogger.warn(`No tax table for ${taxYear.year}, using the ${table.year} table instead`);
+
     return buildTaxSummary({
         taxYear,
-        table: getTaxTable(taxYear.year),
+        table,
         monthlyRows: monthlyRows.map((row) => ({ month: row._id, earned: row.earned, count: row.count })),
         pending: pendingRows[0]?.total ?? 0,
         now,
