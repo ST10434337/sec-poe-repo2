@@ -32,6 +32,15 @@ const userSchema = new mongoose.Schema({
     default: true 
   }, // Admins can disable accounts; checked on login and by requireAuth
   
+  loginAttempts: { 
+    type: Number, 
+    default: 0 
+  },
+
+  lockUntil: { 
+    type: Date, 
+    default: null
+  }  
 }, { timestamps: true });
 
 // Pre-save hook to hash the password before saving

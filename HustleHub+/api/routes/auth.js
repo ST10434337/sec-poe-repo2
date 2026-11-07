@@ -8,7 +8,8 @@ const {
     loginUser,
     getCurrentUser,
     becomeFreelancer,
-    updateUserRole
+    updateUserRole,
+    logoutUser
 } = require('../controllers/authController');
 
 
@@ -19,6 +20,7 @@ router.post('/login', loginUser);
 // Get current user (protected; disabled accounts are blocked by requireAuth)
 router.get('/me', requireAuth, getCurrentUser);
 
+router.post('/logout', requireAuth, logoutUser);
 // Logged-in clients can upgrade themselves to freelancer.
 // Including FREELANCER makes the route safe to call again after upgrading.
 router.post('/become-freelancer', allowRoles(ROLES.CLIENT, ROLES.FREELANCER), becomeFreelancer);

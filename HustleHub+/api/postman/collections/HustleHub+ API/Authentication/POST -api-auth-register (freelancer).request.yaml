@@ -28,4 +28,4 @@ scripts:
         pm.environment.set('freelancer_user_id', body.user.id);
       });
     language: text/javascript
-order: 3000
+order: 2000
