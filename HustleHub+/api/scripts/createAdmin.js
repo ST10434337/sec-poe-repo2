@@ -17,9 +17,9 @@ if (fs.existsSync(baseEnvFile)) {
 }
 
 
-// Same DNS servers as index.js, so the mongodb+srv address resolves the same way
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// Same DNS servers as index.js (DNS_SERVERS in .env), so the mongodb+srv address resolves the same way
+const { applyDnsServers } = require('../config/dns');
+applyDnsServers();
 
 const mongoose = require('mongoose');
 const User = require('../models/User');
