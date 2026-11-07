@@ -42,6 +42,6 @@ export const PAYMENT_STATUS_LABELS = {
 // The page each role lands on after logging in
 export const HOME_BY_ROLE = {
   [ROLES.CLIENT]: '/gigs',
-  [ROLES.FREELANCER]: '/my-gigs',
+  [ROLES.FREELANCER]: '/dashboard',
   [ROLES.ADMIN]: '/admin/users',
 }

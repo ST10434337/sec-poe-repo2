@@ -1,39 +1,32 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getIncome, getMyTransactions } from '../api/transactions.js'
+import { getMyTransactions } from '../api/transactions.js'
 import { useAuth } from '../auth/AuthContext.js'
 import { useApi } from '../hooks/useApi.js'
 import Alert from '../components/Alert.jsx'
-import IncomeSummary from '../components/IncomeSummary.jsx'
 import Pagination from '../components/Pagination.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { ROLES } from '../utils/constants.js'
 import { formatDate, formatRand } from '../utils/format.js'
 
-// Clients see the payments they made; freelancers see the payments they received, plus their income totals
+// Clients see the payments they made; freelancers see the payments they received
+// A freelancer's totals and tax estimate are on the Dashboard (DashboardPage)
 // Every booking creates one simulated payment, so each row links to its booking
 function TransactionsPage() {
   const { user } = useAuth()
   const isFreelancer = user.role === ROLES.FREELANCER
   const [page, setPage] = useState(1)
 
-  const payments = useApi(() => getMyTransactions(page), [page])
-  // Only freelancers have income; clients skip this request
-  const income = useApi(() => (isFreelancer ? getIncome() : Promise.resolve(null)), [isFreelancer])
-
-  const { data, error, loading } = payments
+  const { data, error, loading } = useApi(() => getMyTransactions(page), [page])
 
   return (
     <>
-      <h1>{isFreelancer ? 'Income' : 'My payments'}</h1>
+      <h1>{isFreelancer ? 'Payments received' : 'My payments'}</h1>
 
       {isFreelancer && (
-        <>
-          {income.loading && <p className="muted">Loading income…</p>}
-          {!income.loading && income.error && <Alert type="error">{income.error}</Alert>}
-          {!income.loading && income.data && <IncomeSummary income={income.data} />}
-          <h2>Payments received</h2>
-        </>
+        <p className="muted">
+          Your totals and tax estimate are on your <Link to="/dashboard">Dashboard</Link>.
+        </p>
       )}
 
       {loading && <p className="muted">Loading payments…</p>}

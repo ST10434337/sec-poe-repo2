@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Transaction = require('../models/Transaction');
-const { getFreelancerIncome } = require('../services/incomeService');
+const { getFreelancerIncome, getFreelancerTaxSummary } = require('../services/incomeService');
 const { parsePagination, pageInfo } = require('../utils/pagination');
 const { ROLES } = require('../utils/roles');
 
@@ -35,6 +35,12 @@ const getIncome = async (req, res) => {
     res.json(await getFreelancerIncome(req.userId));
 };
 
+// GET /api/transactions/tax - the logged-in freelancer's estimated tax for this tax year
+// The id comes from their token, so nobody can ask for another freelancer's figures
+const getTaxSummary = async (req, res) => {
+    res.json(await getFreelancerTaxSummary(req.userId));
+};
+
 // GET /api/transactions/:id - one transaction, for either party or an admin
 const getTransactionById = async (req, res) => {
     // reject malformed ids before querying MongoDB
@@ -60,6 +66,7 @@ const listTransactions = async (req, res) => {
 module.exports = {
     getMyTransactions,
     getIncome,
+    getTaxSummary,
     getTransactionById,
     listTransactions
 };

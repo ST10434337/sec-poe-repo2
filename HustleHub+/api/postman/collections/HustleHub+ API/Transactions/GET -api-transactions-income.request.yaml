@@ -17,6 +17,7 @@ scripts:
         pm.expect(body.pending).to.be.a('number');
         pm.expect(body.refunded).to.be.a('number');
         pm.expect(body.completedCount).to.be.a('number');
+        pm.environment.set('income_earned', body.earned);
       });
     language: text/javascript
 order: 3000

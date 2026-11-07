@@ -16,10 +16,11 @@ const LINKS = {
     { to: '/account', label: 'Account' },
   ],
   [ROLES.FREELANCER]: [
+    { to: '/dashboard', label: 'Dashboard' },
     { to: '/gigs', label: 'Browse gigs' },
     { to: '/my-gigs', label: 'My gigs' },
     { to: '/bookings', label: 'Bookings' },
-    { to: '/transactions', label: 'Income' },
+    { to: '/transactions', label: 'Payments' },
     { to: '/account', label: 'Account' },
   ],
   [ROLES.ADMIN]: [

@@ -103,7 +103,7 @@ app.use('/api/gigs', gigRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 // Transaction and income routes (login and role checks are applied inside the router)
-// No rate limit as transactions can refresh often
+// No router-wide rate limit as transactions can refresh often; only /tax has its own limit (in the routes file)
 app.use('/api/transactions', transactionRoutes);
 
 // Admin routes (every route is admin only)
