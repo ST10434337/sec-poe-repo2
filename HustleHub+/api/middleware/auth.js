@@ -6,7 +6,7 @@ function authenticateRequest(req, res) {
 
   // Check for the Authorization header
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     res.status(401).json({ message: 'No Token Provided' });
     return false;
   }
@@ -21,10 +21,17 @@ function authenticateRequest(req, res) {
   // Verify the token and extract the payload
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!payload.userId || !payload.role) {
+      res.status(401).json({ message: 'Invalid token payload' });
+      return false;
+    }
+
     req.user = payload;
-    req.userId = payload.userId;
+    req.userId = String(payload.userId); // Ensure userId is a string for consistent comparisons and SonarQube analysis
+    req.userRole = String(payload.role); // Same as above
     return true;
-  } catch (err) {
+  } catch {
     res.status(401).json({ message: 'Invalid or expired token' });
     return false;
   }

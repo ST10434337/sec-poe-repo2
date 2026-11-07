@@ -11,6 +11,7 @@ services:
     environment:      
       CLIENT_ORIGIN: http://localhost:3000
       REDIS_URL: redis://redis:6379
+      LOG_LEVEL: silent
     ports:
       - "4000:4000"
     depends_on:
@@ -53,5 +54,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10   
+
 volumes:
   redis_data:
+  loki_data:
+  grafana_data:

@@ -2,15 +2,19 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Gig = require('../models/Gig');
 const { parsePagination, pageInfo } = require('../utils/pagination');
+const logger = require('../utils/logger'); // Import the logger utility
+const userId = require('../utils/logUtils'); // Import the logUtils utility
+const adminLogger = logger.child({ tag: 'ADMIN'});
+
 
 // GET /api/admin/users - every user, newest first; passwords are never returned ~> (The IIE, 2026)
 const getUsers = async (req, res) => {
+    adminLogger.info({userId: userId}, 'Called getUsers');
     const { page, limit, skip } = parsePagination(req.query);
     const [users, total] = await Promise.all([
         User.find().select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
         User.countDocuments(),
     ]);
-
     res.json({ users, ...pageInfo(page, limit, total) });
 };
 
@@ -35,6 +39,7 @@ const updateUserStatus = async (req, res) => {
     ).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    adminLogger.info({userId: req.userId}, `Updated user: ${user._id} status`);
     res.json({ user });
 };
 
@@ -51,6 +56,7 @@ const deleteGigAsAdmin = async (req, res) => {
     );
     if (!gig) return res.status(404).json({ message: 'Gig not found' });
 
+    adminLogger.info({userId: req.userId}, `Deleted gig: ${gig._id}`);
     res.json({ message: 'Gig deleted' });
 };
 
