@@ -4,7 +4,13 @@ import { getToken } from '../auth/storage.js'
 // The API answers errors as { message }, and those messages are safe to show ~> (The IIE, 2026)
 
 // Set in .env (copy .env.example). Any trailing slash is removed
-const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
+// A plain loop instead of a regex, so it always runs in linear time ~> (SonarSource, n.d.; OWASP, n.d.)
+function trimTrailingSlashes(url) {
+  let end = url.length
+  while (end > 0 && url[end - 1] === '/') end--
+  return url.slice(0, end)
+}
+const BASE_URL = trimTrailingSlashes(import.meta.env.VITE_API_URL ?? '')
 
 const NETWORK_ERROR = 'Cannot reach the server. Check the API is running, and that you accepted its HTTPS certificate.'
 const SERVER_ERROR = 'Something went wrong. Please try again.'
@@ -78,3 +84,6 @@ export const withQuery = (params = {}) => {
 
 // The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): Module manual. LU4, p.108-110. The Independent Institute of Education (Pty) Ltd.
 // MDN Web Docs (n.d.) URLSearchParams. Available at: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams (Accessed: 12 October 2026).
+
+// OWASP. n.d. Regular expression Denial of Service - ReDoS. [online]. Available at: https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS. [Accessed 7 November 2026]
+// SonarSource. n.d. Regular expressions should not cause non-linear backtracking (javascript:S8786). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS8786&rule_key=javascript%3AS8786. [Accessed 7 November 2026]

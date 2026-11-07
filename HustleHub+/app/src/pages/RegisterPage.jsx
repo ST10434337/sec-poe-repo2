@@ -150,8 +150,9 @@ function RegisterPage() {
                 checked={values.role === choice.value}
                 onChange={handleChange}
               />
-              <span>
-                <strong>{choice.title}</strong>
+              {/* Title sits straight in this span (bold from CSS), so the label's text is easy to find for screen readers and checkers ~> (SonarSource, n.d.; MDN Web Docs, n.d.) */}
+              <span className="choice-text">
+                {choice.title}
                 <br />
                 <span className="muted">{choice.text}</span>
               </span>
@@ -174,3 +175,6 @@ function RegisterPage() {
 export default RegisterPage
 
 // The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): Module manual. The Independent Institute of Education (Pty) Ltd.
+
+// MDN Web Docs. n.d. <label>: The Label element. [online]. Available at: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/label. [Accessed 7 November 2026]
+// SonarSource. n.d. Label elements should have a text label and an associated control (javascript:S6853). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS6853&rule_key=javascript%3AS6853. [Accessed 7 November 2026]

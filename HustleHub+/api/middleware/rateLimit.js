@@ -31,7 +31,7 @@ const rateLimiter = (limit = 100, windowTime = 15, name = 'api') => { // Default
 const getRequestCount = async (ip) => {
     const key = `rate-limit:login:${ip}`;
     const count = await redis.get(key);
-    return count ? parseInt(count, 10) : 0;
+    return count ? Number.parseInt(count, 10) : 0; // Number.parseInt over the global parseInt ~> (SonarSource, n.d.; MDN Web Docs, n.d.)
 };
 
 // Get the remaining time until the rate limit resets for a specific IP address
@@ -45,3 +45,6 @@ module.exports = { rateLimiter, getRequestCount, getResetTime };
 
 //  Frontend Highlights (2024). Creating a simple API rate limiter with NodeJs. [online] Medium.
 //  Available at: https://medium.com/@ignatovich.dm/creating-a-simple-api-rate-limiter-with-node-a834d03bad7a [Accessed 5 Oct. 2026].
+
+// MDN Web Docs. n.d. Number.parseInt(). [online]. Available at: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/parseInt. [Accessed 7 November 2026]
+// SonarSource. n.d. Number static methods and properties should be preferred over global equivalents (javascript:S7773). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS7773&rule_key=javascript%3AS7773. [Accessed 7 November 2026]

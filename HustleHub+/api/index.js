@@ -83,7 +83,7 @@ const errorHandler = require('./middleware/errorHandler');
 
 // Db Config
 const connectDB = require('./config/db');
-connectDB();
+void connectDB(); // connectDB handles its own errors (logs them and stops the app) ~> (SonarSource, n.d.; MDN Web Docs, n.d.)
 // Routes
 const authRoutes = require('./routes/auth');
 const gigRoutes = require('./routes/gigs');
@@ -199,4 +199,7 @@ if (require.main === module) {
 
 module.exports = app; // Export the app for testing purposes
 //The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w):
-//  Module manual. The Independent Institute of Education (Pty) Ltd. 
+//  Module manual. The Independent Institute of Education (Pty) Ltd.
+
+// MDN Web Docs. n.d. void operator. [online]. Available at: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void. [Accessed 7 November 2026]
+// SonarSource. n.d. Promises should not be left unhandled (javascript:S9383). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS9383&rule_key=javascript%3AS9383. [Accessed 7 November 2026]
