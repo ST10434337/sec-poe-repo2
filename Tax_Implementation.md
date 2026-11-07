@@ -216,7 +216,8 @@ const TAX_TABLES = {
 
 - The tables are **frozen** with `Object.freeze`, so no code can change the tax figures while the app runs (MDN Web Docs, n.d.a).
 - `getTaxTable(year)` returns the table for a tax year. If a new tax year has no table yet, it steps back one year at a time and uses the latest
-  older one. SARS often keeps the same figures from one year to the next, so this is a safe fallback, and the dashboard says when it happens.
+  older one. SARS often keeps the same figures from one year to the next, so this is a safe fallback, the dashboard says when it happens,
+  and a warning is logged so it shows up in Grafana.
 
 ### The tax sum – `calculateTax(income, table)`
 
@@ -374,9 +375,10 @@ The Newman test also checks that the **paid income on the tax endpoint matches `
 | Injection | The endpoint takes no input at all |
 | Changing the numbers in the browser | The tax is worked out on the server |
 | Calling the aggregation over and over | Its own rate limit: 60 requests per 15 minutes |
-| Leaking error details | Errors go through the central error handler, so no stack traces are sent |
+| Leaking error details | Errors are caught and logged on the server; the freelancer only gets "Internal server error" |
 | Changing the tax table at runtime | The tables are frozen |
 | Breaking the Content Security Policy | The charts use SVG attributes and CSS classes, no inline styles |
+| Knowing who looked at tax figures | Each request is logged with the freelancer's ID under the `TRANSACTIONS` tag. The tax figures themselves are never logged. |
 
 ---
 
@@ -387,7 +389,8 @@ The Newman test also checks that the **paid income on the tax endpoint matches `
 2. Add the new worked examples and SARS base amounts to `api/tests/unit/taxService.test.js`.
 3. Run `npm run test:unit` in `api/`. The table tests check the new entry's order, rates and threshold for you.
 
-Until the new table is added, the latest older table is used, and the dashboard tells the freelancer that last year's figures are being used.
+Until the new table is added, the latest older table is used, the dashboard tells the freelancer that last year's figures are being used,
+and the API logs a warning. In Grafana, search for `{app="hustlehub-api"} |= "No tax table for"` to see if this is happening.
 
 ---
 
