@@ -1,33 +1,73 @@
 name: Static Code Analysis
 
 on:
-  push:
+#   push:
+#     branches:
+#       - main
+
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
     branches:
       - main
 
-  pull_request:
-    types: [opened, synchronize, reopened]
-
-  workflow_dispatch:
+  # workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   sonarqube:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
 
+    # Do not run SonarQube if CI/CD failed or was cancelled.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      # Check out the exact commit tested by CI/CD.
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      # Download API coverage from the completed CI/CD run.
+      - name: Download API coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: api-coverage
+          path: HustleHub+/api/coverage
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # Download frontend coverage from the completed CI/CD run.
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: HustleHub+/app/coverage
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Verify coverage reports.
+      - name: Verify coverage reports
+        run: |
+          test -f HustleHub+/api/coverage/lcov.info
+          test -f HustleHub+/app/coverage/lcov.info
+          echo "Both coverage reports found successfully."
+
+      # Cache SonarQube packages.
       - name: Cache SonarQube packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+          
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
         with:
