@@ -8,6 +8,7 @@
   "main": "index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test node ./tests/newmanTests.js",
+    "test:unit": "node --test tests/unit/*.test.js",
     "start": "cross-env NODE_ENV=Prod node ./index.js",
     "dev": "cross-env NODE_ENV=Dev nodemon index.js",
     "mkcert": "cross-env NODE_ENV=test node scripts/make-certs.js",

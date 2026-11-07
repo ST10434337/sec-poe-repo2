@@ -114,6 +114,11 @@ jobs:
       - name: Run api tests
         run: npm test
 
+      # Run the unit tests too (tax maths and tax tables).
+      # These need no database or server.
+      - name: Run api unit tests
+        run: npm run test:unit
+
       # Step 6: Build the api (e.g. compile TypeScript).
       # Skipped quietly if there is no "build" script.
       - name: Build api

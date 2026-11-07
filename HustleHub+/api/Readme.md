@@ -787,6 +787,27 @@ Returns totals for a freelancer's income by status.
 
 ---
 
+### GET /api/transactions/tax
+
+Returns the logged-in freelancer's estimated income tax for the current SARS tax year. Freelancers only. Rate limited to 60 requests per 15 minutes.
+
+**Success — 200**
+```json
+{
+  "currency": "ZAR",
+  "taxYear": { "year": 2027, "label": "2026/27", "start": "2026-03-01", "end": "2027-02-28", "tableYear": 2027 },
+  "earned": 150000,
+  "pending": 20000,
+  "estimate": { "taxableIncome": 150000, "tax": 9180, "afterTax": 140820, "effectiveRate": 0.0612, "marginalRate": 0.18 },
+  "ifPendingPaid": { "taxableIncome": 170000, "tax": 12780, "extraTax": 3600 },
+  "monthly": [{ "month": "2026-11", "label": "Nov", "earned": 150000, "count": 2 }]
+}
+```
+
+See `Tax_Implementation.md` for the full response and how the tax is worked out.
+
+---
+
 ### GET /api/transactions
 
 Returns every transaction in the system. This route is restricted to admins.

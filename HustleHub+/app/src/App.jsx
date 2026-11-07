@@ -10,6 +10,7 @@ import AccountPage from './pages/AccountPage.jsx'
 import BookingsPage from './pages/BookingsPage.jsx'
 import BookingDetailPage from './pages/BookingDetailPage.jsx'
 import TransactionsPage from './pages/TransactionsPage.jsx'
+import DashboardPage from './pages/DashboardPage.jsx'
 import MyGigsPage from './pages/MyGigsPage.jsx'
 import GigFormPage from './pages/GigFormPage.jsx'
 import AdminUsersPage from './pages/AdminUsersPage.jsx'
@@ -44,6 +45,7 @@ function App() {
 
         {/* Freelancer */}
         <Route element={<ProtectedRoute roles={[ROLES.FREELANCER]} />}>
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="my-gigs" element={<MyGigsPage />} />
           <Route path="my-gigs/new" element={<GigFormPage />} />
           <Route path="my-gigs/:id/edit" element={<GigFormPage />} />
