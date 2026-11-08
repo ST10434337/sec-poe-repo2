@@ -44,14 +44,14 @@ export default defineConfig(({ mode }) => {
         provider: 'v8',
         reporter: ['text', 'lcov'],
         reportsDirectory: './coverage',
-        exclude: [
-          'node_modules/**',
-          'src/test/**',
-          '**/*.test.{js,jsx,ts,tsx}',
-          '**/*.spec.{js,jsx,ts,tsx}',
-          '**/main.jsx',
-          '**/main.js'
-        ]
+        include: ['src/**/*.{js,jsx}'],
+        exclude: ['src/**/*.test.{js,jsx}', 'src/test/**'],
+        thresholds: {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80,
+        },
       }
     },
   }

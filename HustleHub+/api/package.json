@@ -15,7 +15,8 @@
     "create-admin-dev": "cross-env NODE_ENV=Dev node scripts/createAdmin.js",
     "create-admin": "cross-env NODE_ENV=Prod node scripts/createAdmin.js",
     "build": "node --check index.js",
-    "test:coverage": "cross-env NODE_ENV=test c8 node tests/newmanTests.js"
+    "test:coverage1": "cross-env NODE_ENV=test c8 node tests/newmanTests.js",
+    "test:coverage": "cross-env NODE_ENV=test c8 node tests/runCoverage.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
