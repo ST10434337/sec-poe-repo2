@@ -269,8 +269,19 @@ jobs:
          mkdir -p app
          printf '%s' "$APP_ENV_FILE" > app/.env 
          printf '%s' "$API_ENV_FILE" > api/.env   
-         printf '%s' "$DOCKER_ENV_FILE" > docker.env                          
-         
+         printf '%s' "$DOCKER_ENV_FILE" > docker.env
+
+      # The API runs HTTPS (USE_HTTPS=true in api/.env), so it needs certs in api/certs,
+      # which docker-compose.yml mounts into the container. Without them the API crashes on start.
+      # make-certs.js only uses Node's built-in modules, so no npm install is needed here.
+      # openssl saves the key as owner-only, so hand both files to the container's "node" user (id 1000).
+      # The key stays private; these are throwaway test certs on a temporary machine ~> (Docker Docs, n.d.)
+      - name: Generate test certificates
+        working-directory: HustleHub+/api
+        run: |
+          node scripts/make-certs.js
+          sudo chown 1000:1000 certs/localhost-key.pem certs/localhost-cert.pem
+
       # Build the Docker images for every service in docker-compose.yml
       - name: Build all containers
         working-directory: HustleHub+
@@ -310,3 +321,4 @@ jobs:
 
 # GitHub. n.d. Secure use reference: Using third-party actions. [online]. Available at: https://docs.github.com/en/actions/reference/security/secure-use. [Accessed 8 November 2026]
 # npm. n.d. npm-ci: ignore-scripts. [online]. Available at: https://docs.npmjs.com/cli/v10/commands/npm-ci. [Accessed 8 November 2026]
+# Docker Docs. n.d. Bind mounts. [online]. Available at: https://docs.docker.com/engine/storage/bind-mounts/. [Accessed 8 November 2026]
