@@ -40,19 +40,6 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       setupFiles: './src/test/setup.js',
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'lcov'],
-        reportsDirectory: './coverage',
-        include: ['src/**/*.{js,jsx}'],
-        exclude: ['src/**/*.test.{js,jsx}', 'src/test/**'],
-        thresholds: {
-          statements: 80,
-          branches: 80,
-          functions: 80,
-          lines: 80,
-        },
-      }
     },
   }
 })

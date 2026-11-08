@@ -3,12 +3,13 @@ const User = require('../models/User');
 const Gig = require('../models/Gig');
 const { parsePagination, pageInfo } = require('../utils/pagination');
 const logger = require('../utils/logger'); // Import the logger utility
+const userId = require('../utils/logUtils'); // Import the logUtils utility
 const adminLogger = logger.child({ tag: 'ADMIN'});
 
 
 // GET /api/admin/users - every user, newest first; passwords are never returned ~> (The IIE, 2026)
 const getUsers = async (req, res) => {
-    adminLogger.info({userId: req.userId}, 'Called getUsers');
+    adminLogger.info({userId: userId}, 'Called getUsers');
     const { page, limit, skip } = parsePagination(req.query);
     const [users, total] = await Promise.all([
         User.find().select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
