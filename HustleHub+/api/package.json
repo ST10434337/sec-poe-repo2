@@ -1,0 +1,56 @@
+{
+  "name": "hustlehub",
+  "version": "1.0.0",
+  "description": "Api for the HustleHub+ System Containing the backend and security.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV=test node ./tests/newmanTests.js",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "start": "cross-env NODE_ENV=Prod node ./index.js",
+    "dev": "cross-env NODE_ENV=Dev nodemon index.js",
+    "mkcert": "cross-env NODE_ENV=test node scripts/make-certs.js",
+    "create-admin-dev": "cross-env NODE_ENV=Dev node scripts/createAdmin.js",
+    "create-admin": "cross-env NODE_ENV=Prod node scripts/createAdmin.js",
+    "build": "node --check index.js",
+    "test:coverage1": "cross-env NODE_ENV=test c8 node tests/newmanTests.js",
+    "test:coverage": "cross-env NODE_ENV=test c8 node tests/runCoverage.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.4",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "pino-loki": "^3.0.0",
+    "redis": "^6.3.0"
+  },
+  "devDependencies": {
+    "c8": "^12.0.0",
+    "newman": "^6.2.3",
+    "nodemon": "^3.1.14",
+    "postman-collection": "^5.3.1"
+  },
+  "overrides": {
+    "handlebars": "^4.7.10",
+    "lodash": "^4.17.21",
+    "@faker-js/faker": "5.5.3",
+    "flatted": "^3.4.2",
+    "csv-parse": "^7.0.2",
+    "minimatch": "^11.0.1",
+    "node-forge": "^1.4.0",
+    "jose": "^4.15.5",
+    "qs": "^6.16.1",
+    "underscore": "^1.13.8",
+    "uuid": "^11.1.1"
+  }
+}

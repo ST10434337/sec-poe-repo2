@@ -1,0 +1,13 @@
+$kind: http-request
+name: GET /api/not-a-route (404)
+url: "{{base_url}}/api/not-a-route"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('returns the API not-found response', function () {
+        pm.response.to.have.status(404);
+        pm.expect(pm.response.json().message).to.eql('Route not found');
+      });
+    language: text/javascript
+order: 4000

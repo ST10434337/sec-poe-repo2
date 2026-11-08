@@ -1,0 +1,6 @@
+$kind: http-request
+name: /health
+description: ""
+url: http://localhost:4000/health
+method: GET
+order: 3912918315389996

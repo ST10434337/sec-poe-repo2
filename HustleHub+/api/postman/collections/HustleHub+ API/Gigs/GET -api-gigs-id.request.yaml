@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /api/gigs/:id
+url: "{{base_url}}/api/gigs/{{gig_id}}"
+method: GET
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('returns the active gig by ID', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().gig._id).to.eql(pm.environment.get('gig_id'));
+      });
+    language: text/javascript
+order: 6000

@@ -1,0 +1,17 @@
+$kind: http-request
+name: GET /api/transactions/tax (client)
+url: "{{base_url}}/api/transactions/tax"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('blocks clients from the tax estimate', function () {
+        pm.response.to.have.status(403);
+        pm.expect(pm.response.json().message).to.eql('Access Denied');
+      });
+    language: text/javascript
+order: 3200

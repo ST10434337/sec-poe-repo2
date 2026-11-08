@@ -1,0 +1,180 @@
+import { useState } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { register } from '../api/auth.js'
+import { useAuth } from '../auth/AuthContext.js'
+import Alert from '../components/Alert.jsx'
+import FormField from '../components/FormField.jsx'
+import ShowPassword from '../components/ShowPassword.jsx'
+import { HOME_BY_ROLE, ROLES } from '../utils/constants.js'
+import { PASSWORD_RULE, hasErrors, validateRegister } from '../utils/validation.js'
+
+const EMAIL_TAKEN = 'This email is already registered.'
+
+// Only client and freelancer can be chosen; admins are created by the create-admin script
+const ROLE_CHOICES = [
+  { value: ROLES.CLIENT, title: 'Hire freelancers', text: 'Browse gigs and book them.' },
+  { value: ROLES.FREELANCER, title: 'Offer my services', text: 'Create gigs and get booked by clients.' },
+]
+
+// Register form ~> (The IIE, 2026)
+// The API logs the new user in straight away by returning a token
+function RegisterPage() {
+  const { user, login } = useAuth()
+  const navigate = useNavigate()
+  const [values, setValues] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: ROLES.CLIENT,
+  })
+  const [errors, setErrors] = useState({})
+  const [serverError, setServerError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  // One tick box shows both password boxes, so the user can check they match
+  const [showPasswords, setShowPasswords] = useState(false)
+  const passwordType = showPasswords ? 'text' : 'password'
+
+  // Already logged in: nothing to do here
+  if (user) return <Navigate to={HOME_BY_ROLE[user.role] ?? '/gigs'} replace />
+
+  // Update the field, and clear its error once the user starts fixing it
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setValues((current) => ({ ...current, [name]: value }))
+    if (errors[name]) setErrors((current) => ({ ...current, [name]: '' }))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    // Hide the passwords again before sending, so the browser never saves them as normal text
+    setShowPasswords(false)
+    const found = validateRegister(values)
+    setErrors(found)
+    if (hasErrors(found)) {
+      document.getElementById(Object.keys(found)[0])?.focus()
+      return
+    }
+
+    setSubmitting(true)
+    setServerError('')
+    try {
+      // confirmPassword is only checked here; register() never sends it
+      const data = await register({
+        name: values.name.trim(),
+        email: values.email.trim(),
+        password: values.password,
+        role: values.role,
+      })
+      login(data)
+      navigate(HOME_BY_ROLE[data.user.role] ?? '/gigs', {
+        replace: true,
+        state: { message: `Welcome, ${data.user.name}!`, type: 'success' },
+      })
+    } catch (err) {
+      setServerError(err.status === 409 ? EMAIL_TAKEN : err.message)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <h1>Create an account</h1>
+      <form className="card form-narrow" onSubmit={handleSubmit} noValidate>
+        {/* Only shown when there is an error; two children would always count as "something" to Alert */}
+        {serverError && (
+          <Alert type="error">
+            {serverError}
+            {serverError === EMAIL_TAKEN && (
+              <>
+                {' '}
+                <Link to="/login">Log in instead</Link>
+              </>
+            )}
+          </Alert>
+        )}
+
+        <FormField
+          id="name"
+          label="Name"
+          autoComplete="name"
+          maxLength={100}
+          value={values.name}
+          onChange={handleChange}
+          error={errors.name}
+        />
+        <FormField
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          value={values.email}
+          onChange={handleChange}
+          error={errors.email}
+        />
+        <FormField
+          id="password"
+          label="Password"
+          type={passwordType}
+          autoComplete="new-password"
+          hint={PASSWORD_RULE}
+          value={values.password}
+          onChange={handleChange}
+          error={errors.password}
+        />
+        <FormField
+          id="confirmPassword"
+          label="Confirm password"
+          type={passwordType}
+          autoComplete="new-password"
+          value={values.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+        />
+        <ShowPassword
+          id="show-passwords"
+          label="Show passwords"
+          checked={showPasswords}
+          onChange={setShowPasswords}
+        />
+
+        <fieldset className="fieldset">
+          <legend>I want to:</legend>
+          {ROLE_CHOICES.map((choice) => (
+            <label key={choice.value} className="choice">
+              <input
+                type="radio"
+                name="role"
+                value={choice.value}
+                checked={values.role === choice.value}
+                onChange={handleChange}
+              />
+              {/* Title sits straight in this span (bold from CSS), so the label's text is easy to find for screen readers and checkers ~> (SonarSource, n.d.; MDN Web Docs, n.d.) */}
+              <span className="choice-text">
+                {choice.title}
+                <br />
+                <span className="muted">{choice.text}</span>
+              </span>
+            </label>
+          ))}
+          {errors.role && <small className="field-error">{errors.role}</small>}
+        </fieldset>
+
+        <button type="submit" className="btn" disabled={submitting}>
+          {submitting ? 'Creating account…' : 'Create account'}
+        </button>
+      </form>
+      <p>
+        Already have an account? <Link to="/login">Log in</Link>
+      </p>
+    </>
+  )
+}
+
+export default RegisterPage
+
+// The Independent Institute of Education (IIE) (2026) Information Systems 3D (INSY7314/w): Module manual. The Independent Institute of Education (Pty) Ltd.
+
+// MDN Web Docs. n.d. <label>: The Label element. [online]. Available at: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/label. [Accessed 7 November 2026]
+// SonarSource. n.d. Label elements should have a text label and an associated control (javascript:S6853). [online]. Available at: https://sonarcloud.io/organizations/sonarsource/rules?open=javascript%3AS6853&rule_key=javascript%3AS6853. [Accessed 7 November 2026]

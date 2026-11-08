@@ -1,0 +1,17 @@
+$kind: http-request
+name: GET /system-info (development only)
+url: "{{base_url}}/system-info"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('is available only in development mode', function () {
+        pm.expect(pm.response.code).to.be.oneOf([200, 404]);
+        if (pm.response.code === 200) {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('app');
+          pm.expect(body).to.have.property('environment');
+        }
+      });
+    language: text/javascript
+order: 3000

@@ -1,0 +1,25 @@
+$kind: http-request
+name: PUT /api/gigs/:id
+url: "{{base_url}}/api/gigs/{{gig_id}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "price": 120
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('updates an owned gig', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().gig.price).to.eql(120);
+      });
+    language: text/javascript
+order: 7000

@@ -1,0 +1,34 @@
+$kind: http-request
+name: api/auth/login
+description: ""
+url: https://localhost:4000/api/auth/login
+method: POST
+body:
+  type: json
+  content: "{    \r
+
+    \    \"email\": \"john.joe@example.com\",\r
+
+    \    \"password\": \"Pass123!\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: "// 1. Parse the JSON response from your API\r
+
+      const response = pm.response.json();\r
+
+      \r
+
+      // 2. Extract the token (adjust 'token' if your API uses 'accessToken' or
+      'jwt')\r
+
+      const token = response.token;\r
+
+      \r
+
+      // 3. Save the token to your current environment variables\r
+
+      pm.environment.set(\"auth_token\", token);\r\n"
+    language: text/javascript
+order: 2000

@@ -1,0 +1,19 @@
+$kind: http-request
+name: GET /api/bookings/:id
+url: "{{base_url}}/api/bookings/{{booking_id}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('returns booking and its transaction for a party', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.booking._id).to.eql(pm.environment.get('booking_id'));
+        pm.expect(body).to.have.property('transaction');
+      });
+    language: text/javascript
+order: 5000

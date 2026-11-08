@@ -1,0 +1,29 @@
+$kind: http-request
+name: POST /api/bookings
+url: "{{base_url}}/api/bookings"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "gigId": "{{gig_id}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('creates a booking and its pending transaction', function () {
+        pm.response.to.have.status(201);
+        pm.expect(body.booking.status).to.eql('confirmed');
+        pm.expect(body.transaction.status).to.eql('pending');
+        pm.environment.set('booking_id', body.booking._id);
+        pm.environment.set('transaction_id', body.transaction._id);
+      });
+    language: text/javascript
+order: 1000

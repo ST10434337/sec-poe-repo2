@@ -1,0 +1,22 @@
+$kind: http-request
+name: GET /api/transactions/my-transactions (client)
+url: "{{base_url}}/api/transactions/my-transactions?page=1&limit=10"
+method: GET
+queryParams:
+  page: "1"
+  limit: "10"
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('lists client transactions with pagination metadata', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.transactions).to.be.an('array');
+        pm.expect(body).to.include.all.keys('page', 'limit', 'total', 'totalPages');
+      });
+    language: text/javascript
+order: 1000

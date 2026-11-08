@@ -1,0 +1,25 @@
+$kind: http-request
+name: PATCH /api/bookings/:id/status (in_progress)
+url: "{{base_url}}/api/bookings/{{booking_id}}/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "in_progress"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('moves a booking from confirmed to in_progress', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().booking.status).to.eql('in_progress');
+      });
+    language: text/javascript
+order: 6000

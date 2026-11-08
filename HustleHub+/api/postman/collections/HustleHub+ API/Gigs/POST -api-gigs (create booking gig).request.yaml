@@ -1,0 +1,31 @@
+$kind: http-request
+name: POST /api/gigs (create booking gig)
+url: "{{base_url}}/api/gigs"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Postman test gig",
+      "description": "A test gig created by the Postman collection.",
+      "category": "tech-digital",
+      "price": 100
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('creates a gig and stores its ID', function () {
+        pm.response.to.have.status(201);
+        pm.expect(body.gig.title).to.eql('Postman test gig');
+        pm.expect(body.gig.isActive).to.eql(true);
+        pm.environment.set('gig_id', body.gig._id);
+      });
+    language: text/javascript
+order: 4000

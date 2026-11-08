@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /api/auth/me (without token)
+url: "{{base_url}}/api/auth/me"
+method: GET
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('rejects an unauthenticated request', function () {
+        pm.response.to.have.status(401);
+        pm.expect(pm.response.json().message).to.eql('No Token Provided');
+      });
+    language: text/javascript
+order: 8000

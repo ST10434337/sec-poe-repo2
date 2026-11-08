@@ -1,0 +1,32 @@
+$kind: http-request
+name: POST /api/auth/register (client)
+url: "{{base_url}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{client_email}}",
+      "name": "{{client_name}}",
+      "password": "{{client_password}}",
+      "role": "client"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      const body = pm.response.json();
+      pm.test('registers a client and returns a JWT', function () {
+        pm.response.to.have.status(201);
+        pm.expect(body.token).to.be.a('string').and.not.empty;
+        pm.expect(body.user.role).to.eql('client');
+        pm.expect(body.user).not.to.have.property('password');
+        pm.environment.set('client_token', body.token);
+        pm.environment.set('auth_token', body.token);
+        pm.environment.set('client_user_id', body.user.id);
+      });
+    language: text/javascript
+order: 1000

@@ -1,0 +1,22 @@
+$kind: http-request
+name: GET /api/gigs/my-gigs
+url: "{{base_url}}/api/gigs/my-gigs?page=1&limit=10"
+method: GET
+queryParams:
+  page: "1"
+  limit: "10"
+auth:
+  type: bearer
+  credentials:
+    token: "{{freelancer_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('lists the authenticated freelancer gigs', function () {
+        pm.response.to.have.status(200);
+        const body = pm.response.json();
+        pm.expect(body.gigs).to.be.an('array');
+        pm.expect(body.page).to.eql(1);
+      });
+    language: text/javascript
+order: 3000

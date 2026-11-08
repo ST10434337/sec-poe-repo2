@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET /api/transactions/tax (without token)
+url: "{{base_url}}/api/transactions/tax"
+method: GET
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('rejects a tax request without a token', function () {
+        pm.response.to.have.status(401);
+        pm.expect(pm.response.json().message).to.eql('No Token Provided');
+      });
+    language: text/javascript
+order: 3300
