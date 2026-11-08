@@ -26,14 +26,18 @@ jobs:
     runs-on: ubuntu-latest
 
     # Do not run SonarQube if CI/CD failed or was cancelled.
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Only scan pushes to this repo, never runs started by a pull request from a fork ~> (GitHub, n.d.)
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_repository.full_name == github.repository }}
 
     steps:
-      # Check out the exact commit tested by CI/CD.
+      # Check out main from this repo (trusted code), not the commit sent by the other run.
+      # After a push to main this is the same commit CI/CD just tested ~> (GitHub, n.d.)
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       # Download API coverage from the completed CI/CD run.
@@ -74,3 +78,5 @@ jobs:
           projectBaseDir: HustleHub+
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+# GitHub. n.d. Secure use reference: Mitigating the risks of untrusted code checkout. [online]. Available at: https://docs.github.com/en/actions/reference/security/secure-use. [Accessed 8 November 2026]

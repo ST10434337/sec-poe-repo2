@@ -81,8 +81,9 @@ jobs:
      # Booking creation uses database transactions, which MongoDB
      # only supports on a replica set (not a standalone server).
       - name: Start MongoDB replica set
+        # --publish is the long name for docker's -p (Sonar read "-p" as a MongoDB password flag)
         run: |
-          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
+          docker run -d --name mongo --publish 27017:27017 mongo:7 --replSet rs0 --bind_ip_all
           # Wait for MongoDB to accept connections
           until docker exec mongo mongosh --quiet --eval "db.runCommand({ping:1})"; do sleep 2; done
           # Turn it into a one-member replica set
@@ -100,8 +101,9 @@ jobs:
 
       # Step 3: Install dependencies exactly as listed in package-lock.json.
       # "npm ci" is stricter and more reliable than "npm install" for pipelines.
+      # --ignore-scripts stops package install scripts from running (bcrypt loads its prebuilt binary) ~> (npm, n.d.)
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # Step 4: Check code style/quality.
       # "--if-present" means: skip quietly if there is no "lint" script.
@@ -156,9 +158,9 @@ jobs:
           cache: npm
           cache-dependency-path: HustleHub+/app/package-lock.json
 
-      # Install frontend dependencies
+      # Install frontend dependencies (no package install scripts) ~> (npm, n.d.)
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # Check code style/quality (skipped if no lint script exists)
       - name: Lint
@@ -231,8 +233,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pinned to the full commit SHA of release 0.35.0, because a tag can be moved to other code ~> (GitHub, n.d.)
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           scan-type: fs                   # Scan the files in the repo
           scanners: vuln,secret,misconfig # Which checks to run (see above)
@@ -304,3 +307,6 @@ jobs:
         if: always()
         working-directory: HustleHub+
         run: docker compose down
+
+# GitHub. n.d. Secure use reference: Using third-party actions. [online]. Available at: https://docs.github.com/en/actions/reference/security/secure-use. [Accessed 8 November 2026]
+# npm. n.d. npm-ci: ignore-scripts. [online]. Available at: https://docs.npmjs.com/cli/v10/commands/npm-ci. [Accessed 8 November 2026]
