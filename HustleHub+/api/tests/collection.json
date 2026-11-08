@@ -105,6 +105,34 @@
           ]
         },
         {
+          "name": "POST /api/auth/login (invalid JSON)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rejects invalid JSON with a safe client error', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json().message).to.eql('Invalid JSON body');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "GET /api/not-a-route (404)",
           "request": {
             "method": "GET",
@@ -130,6 +158,34 @@
     {
       "name": "Authentication",
       "item": [
+        {
+          "name": "POST /api/auth/register (rejects admin self-registration)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin-self-register@example.com\",\n  \"name\": \"Admin Self Register\",\n  \"password\": \"Pass123!\",\n  \"role\": \"admin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('prevents public admin registration', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json().message).to.eql('Role must be client or freelancer');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "POST /api/auth/register (client)",
           "request": {
@@ -191,6 +247,34 @@
                   "  pm.expect(body.user).not.to.have.property('password');",
                   "  pm.environment.set('freelancer_token', body.token);",
                   "  pm.environment.set('freelancer_user_id', body.user.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login (unknown account)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"missing-user@example.com\",\n  \"password\": \"Pass123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rejects credentials for an unknown account', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json().message).to.eql('Invalid credentials');",
                   "});"
                 ]
               }
@@ -332,6 +416,28 @@
                   "pm.test('rejects an unauthenticated request', function () {",
                   "  pm.response.to.have.status(401);",
                   "  pm.expect(pm.response.json().message).to.eql('No Token Provided');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me (invalid token)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "not-a-valid-token", "type": "string" }] },
+            "method": "GET",
+            "url": "{{base_url}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rejects an invalid bearer token', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json().message).to.eql('Invalid or expired token');",
                   "});"
                 ]
               }
